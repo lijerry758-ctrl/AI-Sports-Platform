@@ -3,54 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 運動偵測系統</title>
+    <title>跨平台 AI 運動偵測系統</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #1e272e;
             color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
         .container {
-            max-width: 800px;
+            max-width: 640px;
             width: 100%;
             text-align: center;
         }
         h1 {
             color: #00d2d3;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
-        .video-box {
+        .video-container {
+            position: relative;
             width: 100%;
             max-width: 640px;
-            height: 480px;
             background-color: #3d3d3d;
             border: 3px dashed #00d2d3;
             border-radius: 8px;
-            margin: 0 auto 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            color: #a4b0be;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        /* 隱藏原始鏡頭畫面，因為我們要畫骨架在畫布上 */
+        #webcam {
+            display: none;
+        }
+        #output_canvas {
+            width: 100%;
+            height: auto;
+            display: block;
         }
         .dashboard {
             background-color: #2f3542;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             display: flex;
             justify-content: space-around;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .data-card {
             text-align: center;
         }
         .data-value {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #ffff2e;
         }
@@ -62,36 +70,86 @@
             text-decoration: none;
             border-radius: 5px;
             font-weight: bold;
-        }
-        .btn:hover {
-            background-color: #ff6b81;
+            width: 80%;
+            max-width: 200px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AI 運動即時影像偵測</h1>
+        <h1>AI 運動即時偵測 (手機/平板通用版)</h1>
         
-        <div class="video-box">
-            【 鏡頭影像即時串流區域 】
+        <div class="video-container">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="output_canvas" width="640" height="480"></canvas>
         </div>
 
         <div class="dashboard">
             <div class="data-card">
-                <div>動作類型</div>
-                <div class="data-value">未偵測</div>
-            </div>
-            <div class="data-card">
-                <div>即時次數</div>
-                <div class="data-value">0</div>
-            </div>
-            <div class="data-card">
-                <div>動作精準度</div>
-                <div class="data-value">0%</div>
+                <div>AI 偵測狀態</div>
+                <div id="pose-status" class="data-value">相機啟動中...</div>
             </div>
         </div>
 
         <a href="/" class="btn">返回主頁</a>
     </div>
+
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const statusText = document.getElementById('pose-status');
+
+        // 當 MediaPipe 算好骨架節點後，把結果畫到畫布上
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            // 畫上原本的鏡頭畫面
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+            
+            // 如果有抓到人體，在上面畫紅色點點代表偵測成功
+            if (results.poseLandmarks) {
+                statusText.innerText = "偵測到人體！";
+                statusText.style.color = "#2ecc71";
+                
+                // 簡易畫出骨架的核心關節點
+                for (const landmark of results.poseLandmarks) {
+                    const x = landmark.x * canvasElement.width;
+                    const y = landmark.y * canvasElement.height;
+                    canvasCtx.beginPath();
+                    canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = '#ff4757';
+                    canvasCtx.fill();
+                }
+            } else {
+                statusText.innerText = "尋找人體中...";
+                statusText.style.color = "#ffff2e";
+            }
+            canvasCtx.restore();
+        }
+
+        // 初始化 MediaPipe Pose 模型
+        const pose = new Pose({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        });
+        pose.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+        pose.onResults(onResults);
+
+        // 啟動相機（不管是手機、平板還是電腦都會自動調用鏡頭）
+        const camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await pose.send({image: videoElement});
+            },
+            width: 640,
+            height: 480
+        });
+        camera.start();
+    </script>
 </body>
 </html>

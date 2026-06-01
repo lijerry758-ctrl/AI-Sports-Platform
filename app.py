@@ -14,4 +14,5 @@ def detection():
     return render_template('detection.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # 讓同一個 Wi-Fi 底下的手機平板都能連進來
+    app.run(host='0.0.0.0', port=5000, debug=True)
