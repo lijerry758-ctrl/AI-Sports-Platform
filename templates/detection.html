@@ -33,6 +33,7 @@
             align-items: center;
             gap: 15px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
         select {
             padding: 10px 15px;
@@ -44,12 +45,28 @@
             border: 2px solid #00d2d3;
             cursor: pointer;
         }
-        /* 語音開關樣式 */
         .switch-container {
             font-size: 16px;
             display: flex;
             align-items: center;
             gap: 5px;
+        }
+        /* ⏸️ 暫停按鈕樣式 */
+        .btn-pause {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            background-color: #ffa502;
+            color: white;
+        }
+        .btn-pause.running {
+            background-color: #ffa502;
+        }
+        .btn-pause.paused {
+            background-color: #2ed573;
         }
         .video-container {
             position: relative;
@@ -119,6 +136,8 @@
                 <input type="checkbox" id="voice-toggle" checked>
                 <label for="voice-toggle">🔊 開啟語音</label>
             </div>
+
+            <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
         </div>
 
         <div class="video-container">
@@ -154,21 +173,70 @@
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
+        const pauseButton = document.getElementById('pause-button');
 
+        // 狀態控制變數
+        let isPaused = false; 
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
 
+        // 🚀 語音大師控制：依據需求調整為 5 秒（5000毫秒）
         let lastSpeakTime = 0;
-        const SPEAK_INTERVAL = 3000; 
+        const SPEAK_INTERVAL = 5000; 
 
-        function speakFeedback(text) {
-            // 如果前端沒勾選語音，直接罷工不說話
-            if (!voiceToggle.checked) return;
+        // 🧠 歷史記憶庫：記住哪一個動作已經被糾正過第一次了
+        let ttsHistory = {}; 
+
+        // 當使用者切換下拉選單時，重置該動作的語音記憶狀態
+        exerciseSelector.addEventListener('change', () => {
+            const currentEx = exerciseSelector.value;
+            ttsHistory[currentEx] = false; 
+        });
+
+        // ⏸️ 暫停按鈕點擊事件
+        pauseButton.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseButton.innerText = "▶️ 恢復偵測";
+                pauseButton.className = "btn-pause paused";
+                statusText.innerText = "偵測已暫停";
+                statusText.style.color = "#ffa502";
+            } else {
+                pauseButton.innerText = "⏸️ 暫停偵測";
+                pauseButton.className = "btn-pause running";
+                statusText.innerText = "恢復偵測中...";
+                statusText.style.color = "#2ecc71";
+            }
+        });
+
+        // 🔊 智慧語音大腦核心邏輯
+        function speakFeedback(rawText, exerciseName) {
+            if (!voiceToggle.checked || isPaused) return;
 
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
-                const utterance = new SpeechSynthesisUtterance(text);
+
+                let finalText = rawText;
+
+                // 檢查這個動作是不是「第一次」發生異常錯誤
+                if (!ttsHistory[exerciseName]) {
+                    // 第一次：直接念後端回傳的完整詳細做法（例如：屁股再往下坐一點，想像後面有張小椅子！）
+                    ttsHistory[exerciseName] = true; 
+                } else {
+                    // 第二次之後：自動精簡成簡短提示！
+                    if (rawText.includes("不足")) {
+                        finalText = "小白注意，幅度不夠，再下去一點。";
+                    } else if (rawText.includes("過深") || rawText.includes("過低")) {
+                        finalText = "太深了，稍微收回來。";
+                    } else if (rawText.includes("鏡頭太遠")) {
+                        finalText = "請往前站。";
+                    } else {
+                        finalText = "注意姿勢。";
+                    }
+                }
+
+                const utterance = new SpeechSynthesisUtterance(finalText);
                 utterance.lang = 'zh-TW';
                 utterance.rate = 1.1;
                 window.speechSynthesis.speak(utterance);
@@ -180,6 +248,12 @@
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
+            // ⏸️ 暫停防禦：如果按了暫停，就只畫畫面，不處理關節，也不傳送 API
+            if (isPaused) {
+                canvasCtx.restore();
+                return;
+            }
+
             if (results.poseLandmarks) {
                 statusText.innerText = "偵測到人體！";
                 statusText.style.color = "#2ecc71";
@@ -211,7 +285,6 @@
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
-                    // 把「語音有沒有開」同步包進去送給後端
                     const payload = {
                         exercise: selectedExercise,
                         voice_enabled: voiceToggle.checked,
@@ -231,7 +304,7 @@
                         if (data.error) return;
 
                         angleText.innerText = `${data.current_knee_angle}°`;
-                        feedbackText.innerText = data.feedback;
+                        feedbackText.innerText = data.feedback || "姿勢非常標準，請繼續保持！";
 
                         if (data.is_valid) {
                             feedbackText.style.color = "#2ecc71";
@@ -241,8 +314,10 @@
                             feedbackText.style.color = "#ff4757";
                             statusText.innerText = data.status;
                             statusText.style.color = "#ff4757";
+                            
+                            // 呼叫智慧型過濾語音喇叭
                             if (data.feedback) {
-                                speakFeedback(data.feedback);
+                                speakFeedback(data.feedback, selectedExercise);
                             }
                         }
                     })
