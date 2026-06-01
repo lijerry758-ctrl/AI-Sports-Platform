@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import psycopg2
-from analyzer import MovementAnalyzer
+# 修改成商用模組化路徑：
+from core_analyzer.analyzer import MovementAnalyzer
 
 app = Flask(__name__)
 
