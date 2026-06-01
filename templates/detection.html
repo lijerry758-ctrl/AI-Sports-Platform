@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>跨平台 AI 運動偵測系統</title>
+    <title>跨平台 AI 智慧語音健身教練</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
@@ -25,7 +25,23 @@
         h1 {
             color: #00d2d3;
             font-size: 24px;
+            margin-bottom: 10px;
+        }
+        /* 🚀 新增：動作選擇下拉選單 */
+        .selector-container {
             margin-bottom: 15px;
+        }
+        select {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            background-color: #2f3542;
+            color: #00d2d3;
+            border: 2px solid #00d2d3;
+            cursor: pointer;
+            width: 80%;
+            max-width: 300px;
         }
         .video-container {
             position: relative;
@@ -37,7 +53,6 @@
             overflow: hidden;
             margin-bottom: 15px;
         }
-        /* 隱藏原始鏡頭畫面，因為我們要畫骨架在畫布上 */
         #webcam {
             display: none;
         }
@@ -51,16 +66,34 @@
             padding: 15px;
             border-radius: 8px;
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 15px;
+        }
+        .row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
         }
         .data-card {
             text-align: center;
+            flex: 1;
         }
         .data-value {
             font-size: 24px;
             font-weight: bold;
             color: #ffff2e;
+            margin-top: 5px;
+        }
+        .feedback-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #00d2d3;
+            background-color: #1e222b;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 5px;
+            border: 1px solid #3d3d3d;
         }
         .btn {
             display: inline-block;
@@ -77,17 +110,35 @@
 </head>
 <body>
     <div class="container">
-        <h1>AI 運動即時偵測 (手機/平板通用版)</h1>
+        <h1>AI 智慧健身教練 (即時語音版)</h1>
         
+        <div class="selector-container">
+            <select id="exercise-selector">
+                <option value="深蹲 (Squat)">🏋️ 深蹲 (Squat)</option>
+                <option value="伏地挺身 (Pushup)">💪 伏地挺身 (Pushup)</option>
+                <option value="弓箭步 (Lunge)">🦵 弓箭步 (Lunge)</option>
+            </select>
+        </div>
+
         <div class="video-container">
             <video id="webcam" autoplay playsinline></video>
             <canvas id="output_canvas" width="640" height="480"></canvas>
         </div>
 
         <div class="dashboard">
-            <div class="data-card">
-                <div>AI 偵測狀態</div>
-                <div id="pose-status" class="data-value">相機啟動中...</div>
+            <div class="row">
+                <div class="data-card">
+                    <div>AI 判定狀態</div>
+                    <div id="pose-status" class="data-value">相機啟動中...</div>
+                </div>
+                <div class="data-card">
+                    <div>當前核心角度</div>
+                    <div id="knee-angle" class="data-value">--°</div>
+                </div>
+            </div>
+            <div class="data-card" style="width: 100%;">
+                <div style="font-size: 14px; color: #a4b0be;">🔊 語音教練即時反饋 (請開啟手機/電腦聲音)</div>
+                <div id="ai-feedback" class="feedback-value">等待偵測數據...</div>
             </div>
         </div>
 
@@ -99,21 +150,40 @@
         const canvasElement = document.getElementById('output_canvas');
         const canvasCtx = canvasElement.getContext('2d');
         const statusText = document.getElementById('pose-status');
+        const angleText = document.getElementById('knee-angle');
+        const feedbackText = document.getElementById('ai-feedback');
+        const exerciseSelector = document.getElementById('exercise-selector');
 
-        // 當 MediaPipe 算好骨架節點後，把結果畫到畫布上
+        let lastAnalysisTime = 0;
+        const ANALYSIS_INTERVAL = 300; 
+
+        // 🚀 語音教練核心：冷卻機制防止瘋狂碎念
+        let lastSpeakTime = 0;
+        const SPEAK_INTERVAL = 3000; // 每 3 秒最多講一整句話
+
+        function speakFeedback(text) {
+            const currentTime = Date.now();
+            if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
+                lastSpeakTime = currentTime;
+                
+                // 呼叫瀏覽器內建語音大腦
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-TW'; // 設定台灣中文
+                utterance.rate = 1.1;     // 微調語速，聽起來乾脆俐落
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-            
-            // 畫上原本的鏡頭畫面
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
-            // 如果有抓到人體，在上面畫紅色點點代表偵測成功
             if (results.poseLandmarks) {
                 statusText.innerText = "偵測到人體！";
                 statusText.style.color = "#2ecc71";
                 
-                // 簡易畫出骨架的核心關節點
+                // 畫出骨架點
                 for (const landmark of results.poseLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
@@ -122,14 +192,74 @@
                     canvasCtx.fillStyle = '#ff4757';
                     canvasCtx.fill();
                 }
+
+                const landmarks = results.poseLandmarks;
+                const selectedExercise = exerciseSelector.value;
+
+                // 🚀 智慧判定多動作關節點：
+                // 如果是伏地挺身，我們抓 肩(12)-肘(14)-腕(16)
+                // 如果是深蹲或弓箭步，我們抓 髖(24)-膝(26)-踝(28)
+                let p1, p2, p3;
+                if (selectedExercise === "伏地挺身 (Pushup)") {
+                    p1 = landmarks[12] || landmarks[11]; // 肩
+                    p2 = landmarks[14] || landmarks[13]; // 肘
+                    p3 = landmarks[16] || landmarks[15]; // 腕
+                } else {
+                    p1 = landmarks[24] || landmarks[23]; // 髖
+                    p2 = landmarks[26] || landmarks[25]; // 膝
+                    p3 = landmarks[28] || landmarks[27]; // 踝
+                }
+
+                const currentTime = Date.now();
+                if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
+                    lastAnalysisTime = currentTime;
+
+                    const payload = {
+                        exercise: selectedExercise,
+                        shoulder: [p1.x, p1.y], // 這裡名字雖然叫 shoulder/hip，但對後端大腦來說它就是接收三個連續點進行夾角運算
+                        hip: [p1.x, p1.y],
+                        knee: [p2.x, p2.y],
+                        ankle: [p3.x, p3.y]
+                    };
+
+                    fetch('/api/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) return;
+
+                        angleText.innerText = `${data.current_knee_angle}°`;
+                        feedbackText.innerText = data.feedback;
+
+                        if (data.is_valid) {
+                            feedbackText.style.color = "#2ecc71";
+                            statusText.innerText = data.status;
+                            statusText.style.color = "#2ecc71";
+                        } else {
+                            feedbackText.style.color = "#ff4757";
+                            statusText.innerText = data.status;
+                            statusText.style.color = "#ff4757";
+                            
+                            // 🚀 核心落地：姿勢不標準時，立刻調用喇叭大聲喊出教練語音！
+                            speakFeedback(data.feedback);
+                        }
+                    })
+                    .catch(err => console.error("📡 幾何大腦通訊異常:", err));
+                }
+
             } else {
                 statusText.innerText = "尋找人體中...";
                 statusText.style.color = "#ffff2e";
+                angleText.innerText = "--°";
+                feedbackText.innerText = "等待偵測數據...";
+                feedbackText.style.color = "#00d2d3";
             }
             canvasCtx.restore();
         }
 
-        // 初始化 MediaPipe Pose 模型
         const pose = new Pose({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
         });
@@ -141,11 +271,8 @@
         });
         pose.onResults(onResults);
 
-        // 啟動相機（不管是手機、平板還是電腦都會自動調用鏡頭）
         const camera = new Camera(videoElement, {
-            onFrame: async () => {
-                await pose.send({image: videoElement});
-            },
+            onFrame: async () => { await pose.send({image: videoElement}); },
             width: 640,
             height: 480
         });
