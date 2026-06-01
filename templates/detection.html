@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 運動偵測系統</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e272e;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #00d2d3;
+            margin-bottom: 20px;
+        }
+        .video-box {
+            width: 100%;
+            max-width: 640px;
+            height: 480px;
+            background-color: #3d3d3d;
+            border: 3px dashed #00d2d3;
+            border-radius: 8px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #a4b0be;
+        }
+        .dashboard {
+            background-color: #2f3542;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .data-card {
+            text-align: center;
+        }
+        .data-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffff2e;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #ff4757;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #ff6b81;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI 運動即時影像偵測</h1>
+        
+        <div class="video-box">
+            【 鏡頭影像即時串流區域 】
+        </div>
+
+        <div class="dashboard">
+            <div class="data-card">
+                <div>動作類型</div>
+                <div class="data-value">未偵測</div>
+            </div>
+            <div class="data-card">
+                <div>即時次數</div>
+                <div class="data-value">0</div>
+            </div>
+            <div class="data-card">
+                <div>動作精準度</div>
+                <div class="data-value">0%</div>
+            </div>
+        </div>
+
+        <a href="/" class="btn">返回主頁</a>
+    </div>
+</body>
+</html>
