@@ -51,7 +51,6 @@
             align-items: center;
             gap: 5px;
         }
-        /* ⏸️ 暫停按鈕樣式 */
         .btn-pause {
             padding: 10px 20px;
             font-size: 16px;
@@ -62,12 +61,8 @@
             background-color: #ffa502;
             color: white;
         }
-        .btn-pause.running {
-            background-color: #ffa502;
-        }
-        .btn-pause.paused {
-            background-color: #2ed573;
-        }
+        .btn-pause.running { background-color: #ffa502; }
+        .btn-pause.paused { background-color: #2ed573; }
         .video-container {
             position: relative;
             width: 100%;
@@ -119,6 +114,7 @@
         <h1>AI 智慧健身教練 (即時語音版)</h1>
         
         <div class="control-panel">
+            <span style="font-weight: bold; color: #00d2d3;">目前偵測項目：</span>
             <select id="exercise-selector">
                 <option value="深蹲 (Squat)">🏋️ 深蹲 (Squat)</option>
                 <option value="伏地挺身 (Pushup)">💪 伏地挺身 (Pushup)</option>
@@ -175,41 +171,21 @@
         const voiceToggle = document.getElementById('voice-toggle');
         const pauseButton = document.getElementById('pause-button');
 
-        // 狀態控制變數
         let isPaused = false; 
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
 
-        // 🚀 語音大師控制：依據需求調整為 5 秒（5000毫秒）
+        // 🚀 依據你的要求，將語音冷卻時間改為 3 秒（3000毫秒）
         let lastSpeakTime = 0;
-        const SPEAK_INTERVAL = 5000; 
+        const SPEAK_INTERVAL = 3000; 
 
-        // 🧠 歷史記憶庫：記住哪一個動作已經被糾正過第一次了
         let ttsHistory = {}; 
 
-        // 當使用者切換下拉選單時，重置該動作的語音記憶狀態
         exerciseSelector.addEventListener('change', () => {
-            const currentEx = exerciseSelector.value;
-            ttsHistory[currentEx] = false; 
+            ttsHistory[exerciseSelector.value] = false; 
         });
 
-        // ⏸️ 暫停按鈕點擊事件
-        pauseButton.addEventListener('click', () => {
-            isPaused = !isPaused;
-            if (isPaused) {
-                pauseButton.innerText = "▶️ 恢復偵測";
-                pauseButton.className = "btn-pause paused";
-                statusText.innerText = "偵測已暫停";
-                statusText.style.color = "#ffa502";
-            } else {
-                pauseButton.innerText = "⏸️ 暫停偵測";
-                pauseButton.className = "btn-pause running";
-                statusText.innerText = "恢復偵測中...";
-                statusText.style.color = "#2ecc71";
-            }
-        });
-
-        // 🔊 智慧語音大腦核心邏輯
+        // 🔊 智慧語音過濾核心：精準控制「低一點」與「高一點」
         function speakFeedback(rawText, exerciseName) {
             if (!voiceToggle.checked || isPaused) return;
 
@@ -219,20 +195,22 @@
 
                 let finalText = rawText;
 
-                // 檢查這個動作是不是「第一次」發生異常錯誤
                 if (!ttsHistory[exerciseName]) {
-                    // 第一次：直接念後端回傳的完整詳細做法（例如：屁股再往下坐一點，想像後面有張小椅子！）
+                    // 第一次異常：念詳細的溫柔白話文指引
                     ttsHistory[exerciseName] = true; 
                 } else {
-                    // 第二次之後：自動精簡成簡短提示！
-                    if (rawText.includes("不足")) {
-                        finalText = "小白注意，幅度不夠，再下去一點。";
+                    // 🚀 第二次之後的精簡提示：直接喊「低一點」或「高一點」
+                    const match = rawText.match(/\d+/);
+                    const degrees = match ? match[0] : "";
+                    
+                    if (rawText.includes("不足") || rawText.includes("不夠")) {
+                        finalText = `小白，再低一點，還差 ${degrees} 度。`;
                     } else if (rawText.includes("過深") || rawText.includes("過低")) {
-                        finalText = "太深了，稍微收回來。";
+                        finalText = `太深了，再高一點。`;
                     } else if (rawText.includes("鏡頭太遠")) {
                         finalText = "請往前站。";
                     } else {
-                        finalText = "注意姿勢。";
+                        finalText = "低一點。";
                     }
                 }
 
@@ -248,7 +226,6 @@
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
-            // ⏸️ 暫停防禦：如果按了暫停，就只畫畫面，不處理關節，也不傳送 API
             if (isPaused) {
                 canvasCtx.restore();
                 return;
@@ -271,7 +248,7 @@
                 const selectedExercise = exerciseSelector.value;
 
                 let p1, p2, p3;
-                if (selectedExercise.includes("Pushup") || selectedExercise.includes("Plank")) {
+                if (selectedExercise.includes("Pushup") || selectedExercise.includes("Plank") || selectedExercise.includes("伏地挺身") || selectedExercise.includes("棒式")) {
                     p1 = landmarks[12] || landmarks[11]; 
                     p2 = landmarks[14] || landmarks[13]; 
                     p3 = landmarks[16] || landmarks[15]; 
@@ -288,7 +265,7 @@
                     const payload = {
                         exercise: selectedExercise,
                         voice_enabled: voiceToggle.checked,
-                        shoulder: p1 ? [p1.x, p1.y] : null,
+                        shoulder: landmarks[11] ? [landmarks[11].x, landmarks[11].y] : null,
                         hip: p1 ? [p1.x, p1.y] : null,
                         knee: p2 ? [p2.x, p2.y] : null,
                         ankle: p3 ? [p3.x, p3.y] : null
@@ -305,6 +282,18 @@
 
                         angleText.innerText = `${data.current_knee_angle}°`;
                         feedbackText.innerText = data.feedback || "姿勢非常標準，請繼續保持！";
+                        
+                        // 同步自動辨識動作到下拉選單
+                        if (data.exercise_name) {
+                            for (let i = 0; i < exerciseSelector.options.length; i++) {
+                                if (exerciseSelector.options[i].value.includes(data.exercise_name)) {
+                                    if (exerciseSelector.selectedIndex !== i) {
+                                        exerciseSelector.selectedIndex = i;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
 
                         if (data.is_valid) {
                             feedbackText.style.color = "#2ecc71";
@@ -315,9 +304,8 @@
                             statusText.innerText = data.status;
                             statusText.style.color = "#ff4757";
                             
-                            // 呼叫智慧型過濾語音喇叭
                             if (data.feedback) {
-                                speakFeedback(data.feedback, selectedExercise);
+                                speakFeedback(data.feedback, exerciseSelector.value);
                             }
                         }
                     })
@@ -333,6 +321,21 @@
             }
             canvasCtx.restore();
         }
+
+        pauseButton.addEventListener('click', () => {
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseButton.innerText = "▶️ 恢復偵測";
+                pauseButton.className = "btn-pause paused";
+                statusText.innerText = "偵測已暫停";
+                statusText.style.color = "#ffa502";
+            } else {
+                pauseButton.innerText = "⏸️ 暫停偵測";
+                pauseButton.className = "btn-pause running";
+                statusText.innerText = "恢復偵測中...";
+                statusText.style.color = "#2ecc71";
+            }
+        });
 
         const pose = new Pose({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
