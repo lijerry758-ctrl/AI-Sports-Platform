@@ -120,7 +120,7 @@ def analyze_pose():
             is_valid = False
             if "深蹲" in exercise:
                 status = "下蹲深度不足"
-                feedback = "小白注意，屁股要再往下坐一點，想像後面有張小椅子！"
+                feedback = "注意，屁股要再往下坐一點，想像後面有張小椅子！"
             elif "伏地挺身" in exercise:
                 status = "下壓不足"
                 feedback = "手臂再彎一點點，讓胸口更接近地面，慢慢來不用急！"
@@ -144,7 +144,7 @@ def analyze_pose():
                 feedback = "太深了，後腳膝蓋快撞到地板了，稍微抬高一點！"
             else:
                 status = "幅度過大"
-                feedback = "小白注意，動作做太深了，收回一點點來保護關節！"
+                feedback = "注意，動作做太深了，收回一點點來保護關節！"
 
         # 🔇 如果使用者關閉語音，後端直接把 feedback 語音文字清空，不發出聲音！
         if not voice_enabled:

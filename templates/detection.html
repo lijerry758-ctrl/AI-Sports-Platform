@@ -27,12 +27,15 @@
             font-size: 24px;
             margin-bottom: 10px;
         }
-        /* 🚀 新增：動作選擇下拉選單 */
-        .selector-container {
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
             margin-bottom: 15px;
         }
         select {
-            padding: 10px 20px;
+            padding: 10px 15px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 5px;
@@ -40,8 +43,13 @@
             color: #00d2d3;
             border: 2px solid #00d2d3;
             cursor: pointer;
-            width: 80%;
-            max-width: 300px;
+        }
+        /* 語音開關樣式 */
+        .switch-container {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         .video-container {
             position: relative;
@@ -53,14 +61,8 @@
             overflow: hidden;
             margin-bottom: 15px;
         }
-        #webcam {
-            display: none;
-        }
-        #output_canvas {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+        #webcam { display: none; }
+        #output_canvas { width: 100%; height: auto; display: block; }
         .dashboard {
             background-color: #2f3542;
             padding: 15px;
@@ -70,21 +72,9 @@
             gap: 10px;
             margin-bottom: 15px;
         }
-        .row {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-        }
-        .data-card {
-            text-align: center;
-            flex: 1;
-        }
-        .data-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffff2e;
-            margin-top: 5px;
-        }
+        .row { display: flex; justify-content: space-around; width: 100%; }
+        .data-card { text-align: center; flex: 1; }
+        .data-value { font-size: 24px; font-weight: bold; color: #ffff2e; margin-top: 5px; }
         .feedback-value {
             font-size: 22px;
             font-weight: bold;
@@ -93,7 +83,6 @@
             padding: 12px;
             border-radius: 5px;
             margin-top: 5px;
-            border: 1px solid #3d3d3d;
         }
         .btn {
             display: inline-block;
@@ -112,12 +101,24 @@
     <div class="container">
         <h1>AI 智慧健身教練 (即時語音版)</h1>
         
-        <div class="selector-container">
+        <div class="control-panel">
             <select id="exercise-selector">
                 <option value="深蹲 (Squat)">🏋️ 深蹲 (Squat)</option>
                 <option value="伏地挺身 (Pushup)">💪 伏地挺身 (Pushup)</option>
                 <option value="弓箭步 (Lunge)">🦵 弓箭步 (Lunge)</option>
+                <option value="開合跳 (Jumping Jack)">✨ 開合跳</option>
+                <option value="棒式支撐 (Plank)">🧘 棒式支撐</option>
+                <option value="仰臥起坐 (Situp)">🔥 仰臥起坐</option>
+                <option value="引體向上 (Pullup)">🧗 引體向上</option>
+                <option value="波比跳 (Burpee)">💥 波比跳</option>
+                <option value="啞鈴舉背 (Row)">🏋️ 啞鈴舉背</option>
+                <option value="橋式 (Glute Bridge)">🍑 橋式</option>
             </select>
+
+            <div class="switch-container">
+                <input type="checkbox" id="voice-toggle" checked>
+                <label for="voice-toggle">🔊 開啟語音</label>
+            </div>
         </div>
 
         <div class="video-container">
@@ -137,7 +138,6 @@
                 </div>
             </div>
             <div class="data-card" style="width: 100%;">
-                <div style="font-size: 14px; color: #a4b0be;">🔊 語音教練即時反饋 (請開啟手機/電腦聲音)</div>
                 <div id="ai-feedback" class="feedback-value">等待偵測數據...</div>
             </div>
         </div>
@@ -153,23 +153,24 @@
         const angleText = document.getElementById('knee-angle');
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
+        const voiceToggle = document.getElementById('voice-toggle');
 
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
 
-        // 🚀 語音教練核心：冷卻機制防止瘋狂碎念
         let lastSpeakTime = 0;
-        const SPEAK_INTERVAL = 3000; // 每 3 秒最多講一整句話
+        const SPEAK_INTERVAL = 3000; 
 
         function speakFeedback(text) {
+            // 如果前端沒勾選語音，直接罷工不說話
+            if (!voiceToggle.checked) return;
+
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
-                
-                // 呼叫瀏覽器內建語音大腦
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'zh-TW'; // 設定台灣中文
-                utterance.rate = 1.1;     // 微調語速，聽起來乾脆俐落
+                utterance.lang = 'zh-TW';
+                utterance.rate = 1.1;
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -183,7 +184,6 @@
                 statusText.innerText = "偵測到人體！";
                 statusText.style.color = "#2ecc71";
                 
-                // 畫出骨架點
                 for (const landmark of results.poseLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
@@ -196,30 +196,29 @@
                 const landmarks = results.poseLandmarks;
                 const selectedExercise = exerciseSelector.value;
 
-                // 🚀 智慧判定多動作關節點：
-                // 如果是伏地挺身，我們抓 肩(12)-肘(14)-腕(16)
-                // 如果是深蹲或弓箭步，我們抓 髖(24)-膝(26)-踝(28)
                 let p1, p2, p3;
-                if (selectedExercise === "伏地挺身 (Pushup)") {
-                    p1 = landmarks[12] || landmarks[11]; // 肩
-                    p2 = landmarks[14] || landmarks[13]; // 肘
-                    p3 = landmarks[16] || landmarks[15]; // 腕
+                if (selectedExercise.includes("Pushup") || selectedExercise.includes("Plank")) {
+                    p1 = landmarks[12] || landmarks[11]; 
+                    p2 = landmarks[14] || landmarks[13]; 
+                    p3 = landmarks[16] || landmarks[15]; 
                 } else {
-                    p1 = landmarks[24] || landmarks[23]; // 髖
-                    p2 = landmarks[26] || landmarks[25]; // 膝
-                    p3 = landmarks[28] || landmarks[27]; // 踝
+                    p1 = landmarks[24] || landmarks[23]; 
+                    p2 = landmarks[26] || landmarks[25]; 
+                    p3 = landmarks[28] || landmarks[27]; 
                 }
 
                 const currentTime = Date.now();
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
+                    // 把「語音有沒有開」同步包進去送給後端
                     const payload = {
                         exercise: selectedExercise,
-                        shoulder: [p1.x, p1.y], // 這裡名字雖然叫 shoulder/hip，但對後端大腦來說它就是接收三個連續點進行夾角運算
-                        hip: [p1.x, p1.y],
-                        knee: [p2.x, p2.y],
-                        ankle: [p3.x, p3.y]
+                        voice_enabled: voiceToggle.checked,
+                        shoulder: p1 ? [p1.x, p1.y] : null,
+                        hip: p1 ? [p1.x, p1.y] : null,
+                        knee: p2 ? [p2.x, p2.y] : null,
+                        ankle: p3 ? [p3.x, p3.y] : null
                     };
 
                     fetch('/api/analyze', {
@@ -242,12 +241,12 @@
                             feedbackText.style.color = "#ff4757";
                             statusText.innerText = data.status;
                             statusText.style.color = "#ff4757";
-                            
-                            // 🚀 核心落地：姿勢不標準時，立刻調用喇叭大聲喊出教練語音！
-                            speakFeedback(data.feedback);
+                            if (data.feedback) {
+                                speakFeedback(data.feedback);
+                            }
                         }
                     })
-                    .catch(err => console.error("📡 幾何大腦通訊異常:", err));
+                    .catch(err => console.error("📡 通訊異常:", err));
                 }
 
             } else {
