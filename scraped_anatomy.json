@@ -1,0 +1,20 @@
+{
+    "source_url": "https://www.example.com/exercise/squat",
+    "exercise_name": "Example Domain",
+    "classification": "Utility: Basic or Auxiliary",
+    "anatomy_mechanics": {
+        "force": "Push",
+        "mechanism": "Kinetic Chain / Compound",
+        "target_muscle": "Quadriceps (股四頭肌)",
+        "synergists": [
+            "Gluteus Maximus",
+            "Adductor Magnus",
+            "Soleus"
+        ]
+    },
+    "kinetic_standards": {
+        "hip_flexion_degrees": "60 - 90",
+        "knee_flexion_degrees": "70 - 100",
+        "vertebral_alignment": "Neutral Spine"
+    }
+}

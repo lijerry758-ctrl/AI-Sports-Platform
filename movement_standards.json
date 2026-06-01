@@ -1,0 +1,15 @@
+{
+    "movement_name": "Squat",
+    "target_joints": {
+        "hip_angle_min": 60,
+        "hip_angle_max": 95,
+        "knee_angle_min": 70,
+        "knee_angle_max": 100,
+        "shins_to_torso_parallel": true
+    },
+    "error_keywords": [
+        "knee_cave_in",
+        "butt_wink",
+        "excessive_lean"
+    ]
+}
