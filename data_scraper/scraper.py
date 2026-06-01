@@ -11,7 +11,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 class AdvancedExerciseScraper:
     def __init__(self):
         # 這是你剛才複製的新加坡雲端資料庫通行密碼
-        self.db_url = "postgresql://sports_science_db_user:A9CGZc224vNlVEGhDYoag9IKUKuedYXv@dpg-d8ep2m740ujc73dqi380-a.singapore-postgres.render.com/sports_science_db"
+        import os  # 如果最上方沒有，請補上
+        self.db_url = os.environ.get("DATABASE_URL", "postgresql://sports_science_db_user:A9CGZc224vNlVEGhDYoag9IKUKuedYXv@dpg-d8ep2m740ujc73dqi380-a.singapore-postgres.render.com/sports_science_db")
         
         # 初始化 Chrome 設定
         chrome_options = Options()

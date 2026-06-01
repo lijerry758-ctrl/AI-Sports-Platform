@@ -6,7 +6,10 @@ from core_analyzer.analyzer import MovementAnalyzer
 app = Flask(__name__)
 
 # 新加坡雲端資料庫連線通行密碼
-DB_URL = "postgresql://sports_science_db_user:A9CGZc224vNlVEGhDYoag9IKUKuedYXv@dpg-d8ep2m740ujc73dqi380-a.singapore-postgres.render.com/sports_science_db"
+import os  # 在檔案最上方補上這行
+
+# 把原本寫死的 DB_URL 改成商用安全的環境變數讀取：
+DB_URL = os.environ.get("DATABASE_URL", "postgresql://sports_science_db_user:A9CGZc224vNlVEGhDYoag9IKUKuedYXv@dpg-d8ep2m740ujc73dqi380-a.singapore-postgres.render.com/sports_science_db")
 
 def get_cloud_angles(exercise_name="深蹲 (Squat)"):
     """從雲端 PostgreSQL 資料庫即時讀取爬蟲抓到的黃金角度標準"""
