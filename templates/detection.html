@@ -40,7 +40,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 20px;
             background: rgba(31, 41, 55, 0.6);
             padding: 12px 20px;
@@ -83,6 +83,31 @@
         .btn-pause.running { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
         .btn-pause.paused { background: linear-gradient(135deg, #10b981, #059669); color: white; }
         
+        .btn-reset {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-reset:hover { box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
+
+        .target-input-box {
+            width: 55px;
+            padding: 8px;
+            border-radius: 6px;
+            background: #111827;
+            color: #00f2fe;
+            border: 1px solid #00f2fe;
+            font-weight: bold;
+            text-align: center;
+            outline: none;
+        }
+
         .video-container {
             position: relative;
             width: 100%;
@@ -181,12 +206,23 @@
                 <option value="橋式 (Glute Bridge)">🍑 橋式</option>
             </select>
 
+           <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="target-count" style="font-size: 14px; font-weight: bold; color: #fbbf24;">🎯 目標:</label>
+                <input type="number" id="target-count" class="target-input-box" value="10" min="1">
+                <select id="mode-selector" style="padding: 5px; font-size: 13px; font-weight: bold; border-radius: 6px; background-color: #111827; color: #00f2fe; border: 1px solid #00f2fe; cursor: pointer;">
+                    <option value="reps">下 (Reps)</option>
+                    <option value="seconds">秒 (Secs)</option>
+                </select>
+            </div>
+
             <div class="switch-container">
                 <input type="checkbox" id="voice-toggle" checked>
                 <label for="voice-toggle">🔊 開啟語音</label>
             </div>
 
             <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
+            
+            <button id="reset-button" class="btn-reset">🔄 歸零</button>
         </div>
 
         <div id="video-box" class="video-container">
@@ -200,7 +236,6 @@
                     <div class="data-title">AI 狀態判定</div>
                     <div id="pose-status" class="data-value" style="color: #6b7280; font-size: 22px;">啟動中...</div>
                 </div>
-                <!-- ⏱️ 動態看板：這裡的文字會自動依據次數/秒數做動態切換 -->
                 <div class="data-card counter-card">
                     <div id="counter-title" class="data-title" style="color: #00f2fe; font-weight: bold;">🎯 當前累計次數</div>
                     <div id="workout-count" class="data-value">0</div>
@@ -227,11 +262,13 @@
         const statusText = document.getElementById('pose-status');
         const angleText = document.getElementById('knee-angle');
         const countText = document.getElementById('workout-count'); 
-        const counterTitle = document.getElementById('counter-title'); // 🚀 用來切換「次數/秒數」的標題
+        const counterTitle = document.getElementById('counter-title'); 
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
         const pauseButton = document.getElementById('pause-button');
+        const resetButton = document.getElementById('reset-button'); 
+        const targetInput = document.getElementById('target-count');  
 
         let isPaused = false; 
         let lastAnalysisTime = 0;
@@ -239,10 +276,12 @@
 
         let lastSpeakTime = 0;
         const SPEAK_INTERVAL = 3000; 
+        let isCelebrated = false; // 🚀 達標語音鎖定開關
 
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
+        // 🔊 頂級科技感音效產生器
         function playPingSound(isCelebration = false) {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (!isCelebration) {
@@ -257,26 +296,39 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.4);
             } else {
-                [523.25, 659.25, 783.99].forEach((freq, index) => {
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, index) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.08);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.08 + 0.6);
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.1 + 0.8);
                     osc.connect(gain);
                     gain.connect(audioCtx.destination);
-                    osc.start(audioCtx.currentTime + index * 0.08);
-                    osc.stop(audioCtx.currentTime + index * 0.08 + 0.6);
+                    osc.start(audioCtx.currentTime + index * 0.1);
+                    osc.stop(audioCtx.currentTime + index * 0.1 + 0.8);
                 });
             }
         }
 
+        // 📡 【數據防刷防禦】網頁重整時自動向後端追回當前進度
+        function syncWithBrain() {
+            fetch('/api/get_current_counter')
+            .then(res => res.json())
+            .then(data => {
+                countText.innerText = data.counter;
+                if (data.mode === "seconds") {
+                    counterTitle.innerText = "⏱️ 當前累計秒數";
+                } else {
+                    counterTitle.innerText = "🎯 當前累計次數";
+                }
+            });
+        }
+        syncWithBrain();
+
         function smoothLandmarks(currentLandmarks) {
             landmarkHistory.push(currentLandmarks);
-            if (landmarkHistory.length > SMOOTH_FRAMES) {
-                landmarkHistory.shift(); 
-            }
+            if (landmarkHistory.length > SMOOTH_FRAMES) { landmarkHistory.shift(); }
             let smoothed = JSON.parse(JSON.stringify(currentLandmarks));
             for (let i = 0; i < smoothed.length; i++) {
                 let sumX = 0, sumY = 0;
@@ -290,101 +342,89 @@
             return smoothed;
         }
 
-        function speakFeedback(rawText, exerciseName) {
-            if (!voiceToggle.checked || isPaused) return;
+        // 🔊 智慧語音引導大腦（徹底封鎖「做得好」在達標瞬間篡位蓋台的 bug）
+        function speakFeedback(rawText) {
+            // 🚀 核心防禦 A：如果開啟暫停、關閉語音，或者「剛好達成目標正在慶祝中」，全面消音且拒絕發聲！
+            if (!voiceToggle.checked || isPaused || isCelebrated) {
+                if (isCelebrated && !window.speechSynthesis.speaking && rawText === "標準") {
+                    // 讓達標語音擁有絕對路權，一般提示音直接退散
+                } else if (!isCelebrated) {
+                    window.speechSynthesis.cancel();
+                }
+                return;
+            }
 
+            // 如果是標準動作的讚賞
             if (rawText === "標準") {
                 if (window.speechSynthesis.speaking) {
                     window.speechSynthesis.cancel(); 
                     const praise = new SpeechSynthesisUtterance("做得好");
-                    praise.lang = 'zh-TW';
-                    praise.rate = 1.2;
+                    praise.lang = 'zh-TW'; praise.rate = 1.3;
                     window.speechSynthesis.speak(praise);
                 }
                 return;
             }
 
             const currentTime = Date.now();
+            // ⏱️ 一般引導指令的時間鎖，防止語音講話太密碎碎念
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
-
                 let finalText = rawText;
                 const match = rawText.match(/\d+/);
                 const degrees = match ? match[0] : "";
-                
                 if (rawText.includes("不足") || rawText.includes("不夠")) {
-                    finalText = `小白再低一點，差 ${degrees} 度。`;
+                    finalText = `再低一點，還差 ${degrees} 度。`;
                 } else if (rawText.includes("過深") || rawText.includes("過低") || rawText.includes("太深") || rawText.includes("太高")) {
                     finalText = `再高一點。`;
                 }
-
                 const utterance = new SpeechSynthesisUtterance(finalText);
-                utterance.lang = 'zh-TW';
-                utterance.rate = 1.2; 
+                utterance.lang = 'zh-TW'; utterance.rate = 1.2; 
                 window.speechSynthesis.speak(utterance);
             }
         }
-
-        exerciseSelector.addEventListener('change', () => {
-            fetch('/api/reset_counter', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => { countText.innerText = data.counter; });
-        });
 
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
-            if (isPaused) {
-                canvasCtx.restore();
-                return;
-            }
+            if (isPaused) { canvasCtx.restore(); return; }
 
             if (results.poseLandmarks) {
                 const stableLandmarks = smoothLandmarks(results.poseLandmarks);
-                
                 for (const landmark of stableLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
-                    canvasCtx.beginPath();
-                    canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
-                    canvasCtx.fillStyle = '#00f2fe'; 
-                    canvasCtx.fill();
+                    canvasCtx.beginPath(); canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = '#00f2fe'; canvasCtx.fill();
                 }
 
                 const selectedExercise = exerciseSelector.value;
                 
-                // 🚀【高階核心：小白多關節動態分配器】
-                let p1, p2, p3;
-                if (selectedExercise.includes("Pushup") || selectedExercise.includes("伏地挺身")) {
-                    // 伏地挺身：看 肩(12) - 肘(14) - 腕(16)
-                    p1 = stableLandmarks[12] || stableLandmarks[11]; 
-                    p2 = stableLandmarks[14] || stableLandmarks[13]; 
-                    p3 = stableLandmarks[16] || stableLandmarks[15]; 
-                } else if (selectedExercise.includes("Plank") || selectedExercise.includes("棒式")) {
-                    // 棒式支撐：看 肩(12) - 髖(24) - 膝(26)，確保背部是平直的一直線
-                    p1 = stableLandmarks[12] || stableLandmarks[11]; 
-                    p2 = stableLandmarks[24] || stableLandmarks[23]; 
-                    p3 = stableLandmarks[26] || stableLandmarks[25]; 
-                } else {
-                    // 深蹲、弓箭步：看 髖(24) - 膝(26) - 踝(28)
-                    p1 = stableLandmarks[24] || stableLandmarks[23]; 
-                    p2 = stableLandmarks[26] || stableLandmarks[25]; 
-                    p3 = stableLandmarks[28] || stableLandmarks[27]; 
-                }
+                // 📐 擷取全身關鍵關節
+                const sh = stableLandmarks[12] ? [stableLandmarks[12].x, stableLandmarks[12].y] : (stableLandmarks[11] ? [stableLandmarks[11].x, stableLandmarks[11].y] : null);
+                const el = stableLandmarks[14] ? [stableLandmarks[14].x, stableLandmarks[14].y] : (stableLandmarks[13] ? [stableLandmarks[13].x, stableLandmarks[13].y] : null);
+                const wr = stableLandmarks[16] ? [stableLandmarks[16].x, stableLandmarks[16].y] : (stableLandmarks[15] ? [stableLandmarks[15].x, stableLandmarks[15].y] : null);
+                const hp = stableLandmarks[24] ? [stableLandmarks[24].x, stableLandmarks[24].y] : (stableLandmarks[23] ? [stableLandmarks[23].x, stableLandmarks[23].y] : null);
+                const kn = stableLandmarks[26] ? [stableLandmarks[26].x, stableLandmarks[26].y] : (stableLandmarks[25] ? [stableLandmarks[25].x, stableLandmarks[25].y] : null);
+                const ak = stableLandmarks[28] ? [stableLandmarks[28].x, stableLandmarks[28].y] : (stableLandmarks[27] ? [stableLandmarks[27].x, stableLandmarks[27].y] : null);
 
                 const currentTime = Date.now();
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
+                    // 🚀 打包數據發送給後端
                     const payload = {
                         exercise: selectedExercise,
+                        mode: document.getElementById('mode-selector').value, 
                         voice_enabled: voiceToggle.checked,
-                        shoulder: stableLandmarks[11] ? [stableLandmarks[11].x, stableLandmarks[11].y] : null,
-                        hip: p1 ? [p1.x, p1.y] : null,
-                        knee: p2 ? [p2.x, p2.y] : null,
-                        ankle: p3 ? [p3.x, p3.y] : null
+                        shoulder: sh,
+                        elbow: el,
+                        wrist: wr,
+                        shadow: hp, // 注意：如果後端接收變數為 hip，維持原 payload 對照即可
+                        hip: hp,
+                        knee: kn,
+                        ankle: ak
                     };
 
                     fetch('/api/analyze', {
@@ -399,62 +439,58 @@
                         angleText.innerText = `${data.current_knee_angle}°`;
                         countText.innerText = data.counter;
 
-                        // 🚀 核心優化：如果動作類型是秒數，儀表板自動切換成「⏱️ 當前累計秒數」！
-                        if (data.exercise_type === "seconds") {
+                        // 🎯 讀取使用者設定的目標數值與當前自訂的單位模式
+                        const userTarget = parseInt(targetInput.value) || 10;
+                        const currentMode = document.getElementById('mode-selector').value;
+
+                        // 動態切換網頁看板上的文字提示
+                        if (currentMode === "seconds" || data.exercise_type === "seconds") {
                             counterTitle.innerText = "⏱️ 當前累計秒數";
                         } else {
                             counterTitle.innerText = "🎯 當前累計次數";
                         }
 
-                        // 語音達標與每秒「叮！」
-                        if (data.play_ping) {
-                            if (data.exercise_type === "seconds") {
-                                // 秒數型：每過一秒發出清脆的「叮！」
-                                playPingSound(false);
-                            } else {
-                                if (data.counter > 0 && data.counter % 10 === 0) {
-                                    playPingSound(true);
-                                    if (voiceToggle.checked) {
-                                        const celebUtterance = new SpeechSynthesisUtterance(`太強了！成功達成 ${data.counter} 下 ${data.exercise_name}，體力爆發！`);
-                                        celebUtterance.lang = 'zh-TW';
-                                        celebUtterance.rate = 1.1;
-                                        window.speechSynthesis.speak(celebUtterance);
-                                    }
-                                } else {
-                                    playPingSound(false);
-                                }
+                        // 🏁 【通用自訂目標智慧判定引擎】已正確歸位到 .then 肚子裡
+                        if (data.counter >= userTarget && !isCelebrated) {
+                            isCelebrated = true; // 鎖定狀態防止重複觸發
+                            
+                            // 🚀 強制斬斷前面所有正在排隊的提示音，讓達標提醒直接插隊播放！
+                            window.speechSynthesis.cancel(); 
+                            playPingSound(true); // 爆發豪華大和弦
+                            
+                            if (voiceToggle.checked) {
+                                const unitStr = currentMode === "seconds" ? "秒" : "下";
+                                const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！成功完成 ${userTarget} ${unitStr} 的 ${data.exercise_name}，任務挑戰成功！`);
+                                celebUtterance.lang = 'zh-TW'; 
+                                celebUtterance.rate = 1.1;
+                                window.speechSynthesis.speak(celebUtterance);
                             }
+                        } else if (data.play_ping && data.counter < userTarget) {
+                            playPingSound(false); // 未達標時的正常計數音效
                         }
 
                         if (data.is_valid) {
                             feedbackText.innerText = "🔥 姿勢非常標準，請繼續保持！";
                             feedbackText.style.color = "#10b981"; 
-                            statusText.innerText = data.status;
-                            statusText.style.color = "#10b981";
+                            statusText.innerText = data.status; statusText.style.color = "#10b981";
                             videoBox.style.border = "2px solid #10b981";
                             videoBox.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.6)";
-
-                            speakFeedback("標準");
+                            if (data.feedback === "標準") speakFeedback("標準");
                         } else {
                             feedbackText.innerText = `⚠️ ${data.feedback}`;
                             feedbackText.style.color = "#ef4444"; 
-                            statusText.innerText = data.status;
-                            statusText.style.color = "#ef4444";
+                            statusText.innerText = data.status; statusText.style.color = "#ef4444";
                             videoBox.style.border = "2px solid #ef4444";
                             videoBox.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.6)";
-
-                            if (data.feedback) {
-                                speakFeedback(data.feedback);
-                            }
+                            if (data.feedback) speakFeedback(data.feedback);
                         }
 
-                        // 同步自動辨識動作
                         if (data.exercise_name) {
                             for (let i = 0; i < exerciseSelector.options.length; i++) {
                                 if (exerciseSelector.options[i].value.includes(data.exercise_name)) {
                                     if (exerciseSelector.selectedIndex !== i) {
                                         exerciseSelector.selectedIndex = i;
-                                        countText.innerText = "0";
+                                        countText.innerText = "0"; isCelebrated = false;
                                     }
                                     break;
                                 }
@@ -463,52 +499,54 @@
                     })
                     .catch(err => console.error("📡 通訊異常:", err));
                 }
-
             } else {
-                statusText.innerText = "尋找人體中...";
-                statusText.style.color = "#6b7280";
+                statusText.innerText = "尋找人體中..."; statusText.style.color = "#6b7280";
                 angleText.innerText = "--°";
-                feedbackText.innerText = "等待分析核心幾何數據...";
-                feedbackText.style.color = "#00f2fe";
+                feedbackText.innerText = "等待分析核心幾何數據..."; feedbackText.style.color = "#00f2fe";
                 videoBox.style.border = "2px solid #00f2fe";
                 videoBox.style.boxShadow = "0 0 20px rgba(0, 242, 254, 0.25)";
             }
             canvasCtx.restore();
         }
 
+        // 🔄 暫停按鈕事件：加入一鍵點擊，全世界立刻消音強制令
         pauseButton.addEventListener('click', () => {
             isPaused = !isPaused;
             if (isPaused) {
-                pauseButton.innerText = "▶️ 恢復偵測";
+                // 🚀 【消音終結令】：暫停的瞬間，立刻強行切斷所有正在播放與排隊中的聲音！
+                window.speechSynthesis.cancel(); 
+                
+                pauseButton.innerText = "▶️ 恢復偵測"; 
                 pauseButton.className = "btn-pause paused";
-                statusText.innerText = "偵測已暫停";
+                statusText.innerText = "偵測已暫停"; 
                 statusText.style.color = "#f59e0b";
                 videoBox.style.border = "2px solid #f59e0b";
                 videoBox.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
             } else {
-                pauseButton.innerText = "⏸️ 暫停偵測";
+                pauseButton.innerText = "⏸️ 暫停偵測"; 
                 pauseButton.className = "btn-pause running";
-                statusText.innerText = "恢復偵測中...";
+                statusText.innerText = "恢復偵測中..."; 
                 statusText.style.color = "#10b981";
             }
         });
 
-        const pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+        // 重置歸零按鈕事件
+        resetButton.addEventListener('click', () => {
+            fetch('/api/reset_counter', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                countText.innerText = "0";
+                isCelebrated = false; // 歸零時同步解鎖達標語音，讓下次達標能再次觸發
+                feedbackText.innerText = "數據已成功清空，重新開始計數。";
+                feedbackText.style.color = "#00f2fe";
+            });
         });
-        pose.setOptions({
-            modelComplexity: 1,
-            smoothLandmarks: true,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
+
+        const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
+        pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose.onResults(onResults);
 
-        const camera = new Camera(videoElement, {
-            onFrame: async () => { await pose.send({image: videoElement}); },
-            width: 640,
-            height: 480
-        });
+        const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
         camera.start();
     </script>
 </body>
