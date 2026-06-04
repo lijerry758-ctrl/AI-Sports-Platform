@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
-        /* 🌌 全域高階科技深色底 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0b0f19;
@@ -24,8 +23,6 @@
             width: 100%;
             text-align: center;
         }
-        
-        /* ⚡ 炫酷科技感霓虹標題 */
         h1 {
             color: #00f2fe;
             font-size: 28px;
@@ -39,8 +36,6 @@
             color: #6b7280;
             margin-bottom: 20px;
         }
-
-        /* 🎛️ 控制面板精緻化 */
         .control-panel {
             display: flex;
             justify-content: center;
@@ -54,11 +49,6 @@
             backdrop-filter: blur(10px);
             flex-wrap: wrap;
         }
-        label, .switch-container {
-            font-size: 15px;
-            font-weight: 600;
-            color: #9ca3af;
-        }
         select {
             padding: 10px 18px;
             font-size: 15px;
@@ -69,14 +59,7 @@
             border: 1px solid #00f2fe;
             cursor: pointer;
             outline: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 5px rgba(0, 242, 254, 0.2);
         }
-        select:hover {
-            box-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
-        }
-
-        /* 🔊 語音與開關美化 */
         .switch-container {
             display: flex;
             align-items: center;
@@ -88,8 +71,6 @@
             height: 16px;
             accent-color: #00f2fe;
         }
-
-        /* ⏸️ 暫停按鈕升級 */
         .btn-pause {
             padding: 10px 22px;
             font-size: 15px;
@@ -98,24 +79,10 @@
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
         }
-        .btn-pause.running {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
-        .btn-pause.running:hover {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-        }
-        .btn-pause.paused {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        .btn-pause.paused:hover {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-        }
-
-        /* 🎥 核心視訊外框：自帶呼吸霓虹燈效（預設冷光藍） */
+        .btn-pause.running { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .btn-pause.paused { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        
         .video-container {
             position: relative;
             width: 100%;
@@ -130,7 +97,7 @@
         #webcam { display: none; }
         #output_canvas { width: 100%; height: auto; display: block; }
 
-        /* 📊 超級科技感跑車儀表板 */
+        /* 📊 超級跑車儀表板（加入 3 欄式設計，把計數器放大放中央！） */
         .dashboard {
             background: linear-gradient(180deg, rgba(22, 28, 45, 0.8), rgba(17, 24, 39, 0.8));
             padding: 20px;
@@ -140,37 +107,42 @@
             gap: 15px;
             margin-bottom: 25px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .row { display: flex; justify-content: space-around; width: 100%; gap: 15px; }
+        .row { display: flex; justify-content: space-around; width: 100%; gap: 12px; }
         .data-card {
             background: rgba(31, 41, 55, 0.4);
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             flex: 1;
             border: 1px solid rgba(255, 255, 255, 0.02);
         }
+        /* ⭐ 專屬黃金計數器卡片樣式 */
+        .counter-card {
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+        }
         .data-title {
-            font-size: 13px;
+            font-size: 12px;
             color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        
-        /* 🚨 數據大字體動態效果 */
         .data-value {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 800;
             color: #fbbf24;
-            margin-top: 8px;
+            margin-top: 5px;
             font-family: 'Courier New', Courier, monospace;
-            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
         }
-        
-        /* 💬 即時 AI 語音反饋字框 */
-        .feedback-container {
-            width: 100%;
+        /* 👑 次數超級特大字體 */
+        #workout-count {
+            font-size: 42px;
+            color: #00f2fe;
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+            animation: pulse 1s infinite alternate;
         }
+        .feedback-container { width: 100%; }
         .feedback-value {
             font-size: 24px;
             font-weight: bold;
@@ -180,12 +152,7 @@
             border-radius: 12px;
             margin-top: 5px;
             border: 1px solid rgba(0, 242, 254, 0.2);
-            text-shadow: 0 0 8px rgba(0, 242, 254, 0.2);
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
         }
-
-        /* ↩️ 返回按鈕精美化 */
         .btn-back {
             display: inline-block;
             padding: 12px 30px;
@@ -194,15 +161,8 @@
             text-decoration: none;
             border-radius: 8px;
             font-weight: bold;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.05);
             width: 60%;
             max-width: 180px;
-        }
-        .btn-back:hover {
-            color: white;
-            background: linear-gradient(135deg, #4b5563, #374151);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -242,8 +202,12 @@
         <div class="dashboard">
             <div class="row">
                 <div class="data-card">
-                    <div class="data-title">AI 引擎判定狀態</div>
-                    <div id="pose-status" class="data-value" style="color: #6b7280;">系統啟動中...</div>
+                    <div class="data-title">AI 狀態判定</div>
+                    <div id="pose-status" class="data-value" style="color: #6b7280; font-size: 22px;">啟動中...</div>
+                </div>
+                <div class="data-card counter-card">
+                    <div class="data-title" style="color: #00f2fe; font-weight: bold;">🎯 當前累計次數</div>
+                    <div id="workout-count" class="data-value">0</div>
                 </div>
                 <div class="data-card">
                     <div class="data-title">當前核心角度</div>
@@ -266,6 +230,7 @@
         const canvasCtx = canvasElement.getContext('2d');
         const statusText = document.getElementById('pose-status');
         const angleText = document.getElementById('knee-angle');
+        const countText = document.getElementById('workout-count'); // 次數元件
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
@@ -281,7 +246,39 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🚀 三幀滑動平均濾波器，燙平骨架抖動
+        // 🔊 頂級科技感音效產生器（不需要下載 MP3，純靠瀏覽器晶片發聲）
+        function playPingSound(isCelebration = false) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            if (!isCelebration) {
+                // 一般計數成功：清脆的高音「叮！」
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 高音
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.4);
+            } else {
+                // 滿 10 下大達標：雙音和弦慶祝音效！
+                [523.25, 659.25, 783.99].forEach((freq, index) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.08);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.08 + 0.6);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(audioCtx.currentTime + index * 0.08);
+                    osc.stop(audioCtx.currentTime + index * 0.08 + 0.6);
+                });
+            }
+        }
+
         function smoothLandmarks(currentLandmarks) {
             landmarkHistory.push(currentLandmarks);
             if (landmarkHistory.length > SMOOTH_FRAMES) {
@@ -300,11 +297,9 @@
             return smoothed;
         }
 
-        // 🔊 語音控制核心，包含即時中斷與白話指令
         function speakFeedback(rawText) {
             if (!voiceToggle.checked || isPaused) return;
 
-            // 🚀 語音即時阻斷機制：變回標準時立刻切斷警告
             if (rawText === "標準") {
                 if (window.speechSynthesis.speaking) {
                     window.speechSynthesis.cancel(); 
@@ -337,6 +332,13 @@
             }
         }
 
+        // 🎯 切換項目時，主動通知後端將計數器重置歸零
+        exerciseSelector.addEventListener('change', () => {
+            fetch('/api/reset_counter', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => { countText.innerText = data.counter; });
+        });
+
         function onResults(results) {
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
@@ -350,7 +352,6 @@
             if (results.poseLandmarks) {
                 const stableLandmarks = smoothLandmarks(results.poseLandmarks);
                 
-                // 畫出科技感發光青藍色骨架點
                 for (const landmark of stableLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
@@ -395,14 +396,35 @@
                         if (data.error) return;
 
                         angleText.innerText = `${data.current_knee_angle}°`;
+                        
+                        // 🚀 核心升級：同步更新前端大螢幕的次數！
+                        const previousCount = parseInt(countText.innerText) || 0;
+                        countText.innerText = data.counter;
+
+                        // 🚀 核心升級：觸發計數與滿 10 下的大慶祝音效
+                        if (data.play_ping) {
+                            if (data.counter > 0 && data.counter % 10 === 0) {
+                                // 滿 10 下！發出炫酷大和弦，並用語音大肆表揚！
+                                playPingSound(true);
+                                if (voiceToggle.checked) {
+                                    // 🚀 換成這段通用動態版：AI 會自動抓出目前在做的動作（如：深蹲、伏地挺身）並進行專業讚賞！
+                                    const currentExecName = selectedExercise.split(" ")[0]; 
+                                    const celebUtterance = new SpeechSynthesisUtterance(`太強了！成功達成 ${data.counter} 下 ${currentExecName}，體力爆發！`);
+                                    celebUtterance.lang = 'zh-TW';
+                                    celebUtterance.rate = 1.1;
+                                    window.speechSynthesis.speak(celebUtterance);
+                                }
+                            } else {
+                                // 普通加一下：發出清脆的「叮！」
+                                playPingSound(false);
+                            }
+                        }
 
                         if (data.is_valid) {
                             feedbackText.innerText = "🔥 姿勢非常標準，請繼續保持！";
                             feedbackText.style.color = "#10b981"; 
                             statusText.innerText = data.status;
                             statusText.style.color = "#10b981";
-                            
-                            // 🚀 霓虹大整容：標準時外框亮綠光
                             videoBox.style.border = "2px solid #10b981";
                             videoBox.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.6)";
 
@@ -412,8 +434,6 @@
                             feedbackText.style.color = "#ef4444"; 
                             statusText.innerText = data.status;
                             statusText.style.color = "#ef4444";
-                            
-                            // 🚀 霓虹大整容：不標準時外框亮紅光
                             videoBox.style.border = "2px solid #ef4444";
                             videoBox.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.6)";
 
@@ -428,6 +448,8 @@
                                 if (exerciseSelector.options[i].value.includes(data.exercise_name)) {
                                     if (exerciseSelector.selectedIndex !== i) {
                                         exerciseSelector.selectedIndex = i;
+                                        // 自動辨識切換時，前端也順便將計數看板清空，重新計算新動作
+                                        countText.innerText = "0";
                                     }
                                     break;
                                 }
