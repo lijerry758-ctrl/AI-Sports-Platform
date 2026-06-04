@@ -175,48 +175,72 @@
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
 
-        // 🚀 依據你的要求，將語音冷卻時間改為 3 秒（3000毫秒）
         let lastSpeakTime = 0;
         const SPEAK_INTERVAL = 3000; 
 
-        let ttsHistory = {}; 
+        // 🚀 武器 A：初始化關節座標緩衝滑動矩陣（用來存前 3 幀的歷史數據）
+        let landmarkHistory = [];
+        const SMOOTH_FRAMES = 3; 
 
-        exerciseSelector.addEventListener('change', () => {
-            ttsHistory[exerciseSelector.value] = false; 
-        });
+        // 🚀 武器 A：小白萬用平滑濾波器函數
+        function smoothLandmarks(currentLandmarks) {
+            landmarkHistory.push(currentLandmarks);
+            if (landmarkHistory.length > SMOOTH_FRAMES) {
+                landmarkHistory.shift(); // 丟掉最舊的一幀
+            }
 
-        // 🔊 智慧語音過濾核心：精準控制「低一點」與「高一點」
-        function speakFeedback(rawText, exerciseName) {
+            // 用第一幀當作複製模板
+            let smoothed = JSON.parse(JSON.stringify(currentLandmarks));
+            
+            // 將這 3 幀的每一個關節點的 X、Y 座標通通加起來平均
+            for (let i = 0; i < smoothed.length; i++) {
+                let sumX = 0, sumY = 0;
+                for (let j = 0; j < landmarkHistory.length; j++) {
+                    sumX += landmarkHistory[j][i].x;
+                    sumY += landmarkHistory[j][i].y;
+                }
+                smoothed[i].x = sumX / landmarkHistory.length;
+                smoothed[i].y = sumY / landmarkHistory.length;
+            }
+            return smoothed;
+        }
+
+        // 🔊 智慧型語音控制：新增「阻斷過期語音」功能
+        function speakFeedback(rawText) {
             if (!voiceToggle.checked || isPaused) return;
+
+            // 🚀 武器 C：如果後端判定「已經標準」了，立刻強制中斷所有正在排隊或朗讀中的錯誤警告！
+            if (rawText === "標準") {
+                if (window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel(); // 斬斷過期語音！
+                    
+                    // 貼心地輕聲讚賞一聲，代表現在姿勢很棒！
+                    const praise = new SpeechSynthesisUtterance("做得好");
+                    praise.lang = 'zh-TW';
+                    praise.rate = 1.2;
+                    window.speechSynthesis.speak(praise);
+                }
+                return;
+            }
 
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
 
+                // 為了乾脆俐落，精簡化語音發音
                 let finalText = rawText;
-
-                if (!ttsHistory[exerciseName]) {
-                    // 第一次異常：念詳細的溫柔白話文指引
-                    ttsHistory[exerciseName] = true; 
-                } else {
-                    // 🚀 第二次之後的精簡提示：直接喊「低一點」或「高一點」
-                    const match = rawText.match(/\d+/);
-                    const degrees = match ? match[0] : "";
-                    
-                    if (rawText.includes("不足") || rawText.includes("不夠")) {
-                        finalText = `小白，再低一點，還差 ${degrees} 度。`;
-                    } else if (rawText.includes("過深") || rawText.includes("過低")) {
-                        finalText = `太深了，再高一點。`;
-                    } else if (rawText.includes("鏡頭太遠")) {
-                        finalText = "請往前站。";
-                    } else {
-                        finalText = "低一點。";
-                    }
+                const match = rawText.match(/\d+/);
+                const degrees = match ? match[0] : "";
+                
+                if (rawText.includes("不足") || rawText.includes("不夠")) {
+                    finalText = `小白再低一點，差 ${degrees} 度。`;
+                } else if (rawText.includes("過深") || rawText.includes("過低")) {
+                    finalText = `太深了，再高一點。`;
                 }
 
                 const utterance = new SpeechSynthesisUtterance(finalText);
                 utterance.lang = 'zh-TW';
-                utterance.rate = 1.1;
+                utterance.rate = 1.2; // 語速稍微加快，聽起來更即時
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -234,8 +258,12 @@
             if (results.poseLandmarks) {
                 statusText.innerText = "偵測到人體！";
                 statusText.style.color = "#2ecc71";
+
+                // 🚀 武器 A：通電！強迫將原始抖動骨架丟進濾波器洗乾淨
+                const stableLandmarks = smoothLandmarks(results.poseLandmarks);
                 
-                for (const landmark of results.poseLandmarks) {
+                // 畫出燙平後的完美紅色骨架點
+                for (const landmark of stableLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
                     canvasCtx.beginPath();
@@ -244,18 +272,16 @@
                     canvasCtx.fill();
                 }
 
-                const landmarks = results.poseLandmarks;
                 const selectedExercise = exerciseSelector.value;
-
                 let p1, p2, p3;
                 if (selectedExercise.includes("Pushup") || selectedExercise.includes("Plank") || selectedExercise.includes("伏地挺身") || selectedExercise.includes("棒式")) {
-                    p1 = landmarks[12] || landmarks[11]; 
-                    p2 = landmarks[14] || landmarks[13]; 
-                    p3 = landmarks[16] || landmarks[15]; 
+                    p1 = stableLandmarks[12] || stableLandmarks[11]; 
+                    p2 = stableLandmarks[14] || stableLandmarks[13]; 
+                    p3 = stableLandmarks[16] || stableLandmarks[15]; 
                 } else {
-                    p1 = landmarks[24] || landmarks[23]; 
-                    p2 = landmarks[26] || landmarks[25]; 
-                    p3 = landmarks[28] || landmarks[27]; 
+                    p1 = stableLandmarks[24] || stableLandmarks[23]; 
+                    p2 = stableLandmarks[26] || stableLandmarks[25]; 
+                    p3 = stableLandmarks[28] || stableLandmarks[27]; 
                 }
 
                 const currentTime = Date.now();
@@ -265,7 +291,7 @@
                     const payload = {
                         exercise: selectedExercise,
                         voice_enabled: voiceToggle.checked,
-                        shoulder: landmarks[11] ? [landmarks[11].x, landmarks[11].y] : null,
+                        shoulder: stableLandmarks[11] ? [stableLandmarks[11].x, stableLandmarks[11].y] : null,
                         hip: p1 ? [p1.x, p1.y] : null,
                         knee: p2 ? [p2.x, p2.y] : null,
                         ankle: p3 ? [p3.x, p3.y] : null
@@ -281,9 +307,27 @@
                         if (data.error) return;
 
                         angleText.innerText = `${data.current_knee_angle}°`;
-                        feedbackText.innerText = data.feedback || "姿勢非常標準，請繼續保持！";
-                        
-                        // 同步自動辨識動作到下拉選單
+
+                        if (data.is_valid) {
+                            feedbackText.innerText = "姿勢非常標準，請繼續保持！";
+                            feedbackText.style.color = "#2ecc71";
+                            statusText.innerText = data.status;
+                            statusText.style.color = "#2ecc71";
+                            
+                            // 🚀 觸發語音阻斷：告訴音響立刻閉嘴改唸「做得好」
+                            speakFeedback("標準");
+                        } else {
+                            feedbackText.innerText = data.feedback;
+                            feedbackText.style.color = "#ff4757";
+                            statusText.innerText = data.status;
+                            statusText.style.color = "#ff4757";
+                            
+                            if (data.feedback) {
+                                speakFeedback(data.feedback);
+                            }
+                        }
+
+                        // 同步自動辨識動作到選單
                         if (data.exercise_name) {
                             for (let i = 0; i < exerciseSelector.options.length; i++) {
                                 if (exerciseSelector.options[i].value.includes(data.exercise_name)) {
@@ -292,20 +336,6 @@
                                     }
                                     break;
                                 }
-                            }
-                        }
-
-                        if (data.is_valid) {
-                            feedbackText.style.color = "#2ecc71";
-                            statusText.innerText = data.status;
-                            statusText.style.color = "#2ecc71";
-                        } else {
-                            feedbackText.style.color = "#ff4757";
-                            statusText.innerText = data.status;
-                            statusText.style.color = "#ff4757";
-                            
-                            if (data.feedback) {
-                                speakFeedback(data.feedback, exerciseSelector.value);
                             }
                         }
                     })

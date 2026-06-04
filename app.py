@@ -5,11 +5,9 @@ from core_analyzer.analyzer import MovementAnalyzer
 
 app = Flask(__name__)
 
-# 新加坡雲端資料庫連線通行密碼
 DB_URL = os.environ.get("DATABASE_URL", "postgresql://sports_science_db_user:A9CGZc224vNlVEGhDYoag9IKUKuedYXv@dpg-d8ep2m740ujc73dqi380-a.singapore-postgres.render.com/sports_science_db")
 
 def get_cloud_angles(exercise_name):
-    """從雲端資料庫撈取標準，若連不上，直接依據動作吐出小白安全參數保護"""
     standards_map = {
         "深蹲": {"min": 60.0, "max": 100.0},
         "伏地挺身": {"min": 70.0, "max": 120.0},
@@ -38,7 +36,6 @@ def detection():
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_pose():
-    """高階 AI 診斷接口（支持自動動作辨識、動態度數差指引、小白專用防禦）"""
     try:
         data = request.get_json()
         if not data:
@@ -52,7 +49,6 @@ def analyze_pose():
         knee = data.get("knee")
         ankle = data.get("ankle")
 
-        # 🎥【鏡頭太遠防禦】
         if not hip or not knee or not ankle:
             return jsonify({
                 "exercise_name": exercise,
@@ -62,8 +58,7 @@ def analyze_pose():
                 "is_valid": False
             })
 
-        # 🧠【核心升級：AI 自動動作辨識】
-        # 如果人體肩膀和臀部的垂直高度差距極小（小於 0.15），代表身體呈水平狀態，AI 自動判定為伏地挺身或棒式！
+        # AI 自動動作辨識
         if shoulder and hip:
             height_diff = abs(shoulder[1] - hip[1])
             if height_diff < 0.15:
@@ -72,7 +67,6 @@ def analyze_pose():
                 else:
                     exercise = "伏地挺身"
             else:
-                # 如果是直立狀態，但網頁選單選的是伏地挺身，AI 會貼心地自動幫你切換回深蹲
                 if "Pushup" in exercise or "伏地挺身" in exercise:
                     exercise = "深蹲"
 
@@ -81,38 +75,37 @@ def analyze_pose():
         current_angle = analyzer.calculate_angle(hip, knee, ankle)
         
         status = "姿勢標準"
-        feedback = "動作做得非常漂亮！很有天賦，保持節奏慢慢來！"
+        feedback = "標準" # 🚀 簡化標籤，方便前端判斷是否阻斷過期語音
         is_valid = True
 
-        # 🎯【核心升級：動態方向指引（告訴你該怎麼變才好）】
-        if current_angle > standards["max"]:
+        # 🚀 武器 B：動態緩衝角度機制（Hysteresis）。加上 3 度的容錯地帶，防止骨架在邊界抖動時頻繁誤判
+        BUFFER = 3.0
+
+        if current_angle > (standards["max"] + BUFFER):
             is_valid = False
-            # 計算距離標準還差幾度
             angle_gap = int(current_angle - standards["max"])
-            
             if "深蹲" in exercise:
                 status = "下蹲深度不足"
-                feedback = f"小白注意，你距離標準還差大約 {angle_gap} 度！屁股要再往下坐一點，想像後面有張小椅子！"
+                feedback = f"再低一點，還差 {angle_gap} 度。"
             elif "伏地挺身" in exercise:
                 status = "下壓不足"
-                feedback = f"手臂再彎下一點點，讓胸口接近地面，還差大約 {angle_gap} 度，加油！"
+                feedback = f"再低一點，還差 {angle_gap} 度。"
             else:
                 status = "幅度不足"
-                feedback = f"再加把勁！動作幅度再加大大約 {angle_gap} 度就合格了！"
+                feedback = f"再低一點，還差 {angle_gap} 度。"
 
-        elif current_angle < standards["min"]:
+        elif current_angle < (standards["min"] - BUFFER):
             is_valid = False
             angle_gap = int(standards["min"] - current_angle)
-            
             if "深蹲" in exercise:
                 status = "下蹲過深"
-                feedback = f"蹲太深囉！你多蹲了 {angle_gap} 度，注意膝蓋壓力，稍微往上站起一點點！"
+                feedback = f"再高一點，多蹲了 {angle_gap} 度。"
             elif "伏地挺身" in exercise:
                 status = "支撐過低"
-                feedback = f"趴得太低了，手肘多彎了 {angle_gap} 度，用手掌力量把身體稍微推起來一點！"
+                feedback = f"再高一點，低了 {angle_gap} 度。"
             else:
                 status = "幅度過大"
-                feedback = f"動作做太深了，收回大約 {angle_gap} 度來保護關節！"
+                feedback = f"再高一點。"
 
         if not voice_enabled:
             feedback = ""
