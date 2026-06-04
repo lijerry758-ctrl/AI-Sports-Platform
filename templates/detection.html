@@ -97,7 +97,6 @@
         #webcam { display: none; }
         #output_canvas { width: 100%; height: auto; display: block; }
 
-        /* 📊 超級跑車儀表板（加入 3 欄式設計，把計數器放大放中央！） */
         .dashboard {
             background: linear-gradient(180deg, rgba(22, 28, 45, 0.8), rgba(17, 24, 39, 0.8));
             padding: 20px;
@@ -116,7 +115,6 @@
             flex: 1;
             border: 1px solid rgba(255, 255, 255, 0.02);
         }
-        /* ⭐ 專屬黃金計數器卡片樣式 */
         .counter-card {
             background: rgba(0, 242, 254, 0.1);
             border: 1px solid rgba(0, 242, 254, 0.3);
@@ -135,23 +133,20 @@
             margin-top: 5px;
             font-family: 'Courier New', Courier, monospace;
         }
-        /* 👑 次數超級特大字體 */
         #workout-count {
             font-size: 42px;
             color: #00f2fe;
             text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
-            animation: pulse 1s infinite alternate;
         }
         .feedback-container { width: 100%; }
         .feedback-value {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #00f2fe;
             background-color: #0f172a;
             padding: 16px;
             border-radius: 12px;
             margin-top: 5px;
-            border: 1px solid rgba(0, 242, 254, 0.2);
         }
         .btn-back {
             display: inline-block;
@@ -205,8 +200,9 @@
                     <div class="data-title">AI 狀態判定</div>
                     <div id="pose-status" class="data-value" style="color: #6b7280; font-size: 22px;">啟動中...</div>
                 </div>
+                <!-- ⏱️ 動態看板：這裡的文字會自動依據次數/秒數做動態切換 -->
                 <div class="data-card counter-card">
-                    <div class="data-title" style="color: #00f2fe; font-weight: bold;">🎯 當前累計次數</div>
+                    <div id="counter-title" class="data-title" style="color: #00f2fe; font-weight: bold;">🎯 當前累計次數</div>
                     <div id="workout-count" class="data-value">0</div>
                 </div>
                 <div class="data-card">
@@ -230,7 +226,8 @@
         const canvasCtx = canvasElement.getContext('2d');
         const statusText = document.getElementById('pose-status');
         const angleText = document.getElementById('knee-angle');
-        const countText = document.getElementById('workout-count'); // 次數元件
+        const countText = document.getElementById('workout-count'); 
+        const counterTitle = document.getElementById('counter-title'); // 🚀 用來切換「次數/秒數」的標題
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
@@ -246,16 +243,13 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🔊 頂級科技感音效產生器（不需要下載 MP3，純靠瀏覽器晶片發聲）
         function playPingSound(isCelebration = false) {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
             if (!isCelebration) {
-                // 一般計數成功：清脆的高音「叮！」
                 const oscillator = audioCtx.createOscillator();
                 const gainNode = audioCtx.createGain();
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 高音
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
                 gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
                 oscillator.connect(gainNode);
@@ -263,7 +257,6 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.4);
             } else {
-                // 滿 10 下大達標：雙音和弦慶祝音效！
                 [523.25, 659.25, 783.99].forEach((freq, index) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
@@ -297,7 +290,7 @@
             return smoothed;
         }
 
-        function speakFeedback(rawText) {
+        function speakFeedback(rawText, exerciseName) {
             if (!voiceToggle.checked || isPaused) return;
 
             if (rawText === "標準") {
@@ -321,8 +314,8 @@
                 
                 if (rawText.includes("不足") || rawText.includes("不夠")) {
                     finalText = `小白再低一點，差 ${degrees} 度。`;
-                } else if (rawText.includes("過深") || rawText.includes("過低")) {
-                    finalText = `太深了，再高一點。`;
+                } else if (rawText.includes("過深") || rawText.includes("過低") || rawText.includes("太深") || rawText.includes("太高")) {
+                    finalText = `再高一點。`;
                 }
 
                 const utterance = new SpeechSynthesisUtterance(finalText);
@@ -332,7 +325,6 @@
             }
         }
 
-        // 🎯 切換項目時，主動通知後端將計數器重置歸零
         exerciseSelector.addEventListener('change', () => {
             fetch('/api/reset_counter', { method: 'POST' })
             .then(res => res.json())
@@ -362,12 +354,21 @@
                 }
 
                 const selectedExercise = exerciseSelector.value;
+                
+                // 🚀【高階核心：小白多關節動態分配器】
                 let p1, p2, p3;
-                if (selectedExercise.includes("Pushup") || selectedExercise.includes("Plank") || selectedExercise.includes("伏地挺身") || selectedExercise.includes("棒式")) {
+                if (selectedExercise.includes("Pushup") || selectedExercise.includes("伏地挺身")) {
+                    // 伏地挺身：看 肩(12) - 肘(14) - 腕(16)
                     p1 = stableLandmarks[12] || stableLandmarks[11]; 
                     p2 = stableLandmarks[14] || stableLandmarks[13]; 
                     p3 = stableLandmarks[16] || stableLandmarks[15]; 
+                } else if (selectedExercise.includes("Plank") || selectedExercise.includes("棒式")) {
+                    // 棒式支撐：看 肩(12) - 髖(24) - 膝(26)，確保背部是平直的一直線
+                    p1 = stableLandmarks[12] || stableLandmarks[11]; 
+                    p2 = stableLandmarks[24] || stableLandmarks[23]; 
+                    p3 = stableLandmarks[26] || stableLandmarks[25]; 
                 } else {
+                    // 深蹲、弓箭步：看 髖(24) - 膝(26) - 踝(28)
                     p1 = stableLandmarks[24] || stableLandmarks[23]; 
                     p2 = stableLandmarks[26] || stableLandmarks[25]; 
                     p3 = stableLandmarks[28] || stableLandmarks[27]; 
@@ -396,27 +397,32 @@
                         if (data.error) return;
 
                         angleText.innerText = `${data.current_knee_angle}°`;
-                        
-                        // 🚀 核心升級：同步更新前端大螢幕的次數！
-                        const previousCount = parseInt(countText.innerText) || 0;
                         countText.innerText = data.counter;
 
-                        // 🚀 核心升級：觸發計數與滿 10 下的大慶祝音效
+                        // 🚀 核心優化：如果動作類型是秒數，儀表板自動切換成「⏱️ 當前累計秒數」！
+                        if (data.exercise_type === "seconds") {
+                            counterTitle.innerText = "⏱️ 當前累計秒數";
+                        } else {
+                            counterTitle.innerText = "🎯 當前累計次數";
+                        }
+
+                        // 語音達標與每秒「叮！」
                         if (data.play_ping) {
-                            if (data.counter > 0 && data.counter % 10 === 0) {
-                                // 滿 10 下！發出炫酷大和弦，並用語音大肆表揚！
-                                playPingSound(true);
-                                if (voiceToggle.checked) {
-                                    // 🚀 換成這段通用動態版：AI 會自動抓出目前在做的動作（如：深蹲、伏地挺身）並進行專業讚賞！
-                                    const currentExecName = selectedExercise.split(" ")[0]; 
-                                    const celebUtterance = new SpeechSynthesisUtterance(`太強了！成功達成 ${data.counter} 下 ${currentExecName}，體力爆發！`);
-                                    celebUtterance.lang = 'zh-TW';
-                                    celebUtterance.rate = 1.1;
-                                    window.speechSynthesis.speak(celebUtterance);
-                                }
-                            } else {
-                                // 普通加一下：發出清脆的「叮！」
+                            if (data.exercise_type === "seconds") {
+                                // 秒數型：每過一秒發出清脆的「叮！」
                                 playPingSound(false);
+                            } else {
+                                if (data.counter > 0 && data.counter % 10 === 0) {
+                                    playPingSound(true);
+                                    if (voiceToggle.checked) {
+                                        const celebUtterance = new SpeechSynthesisUtterance(`太強了！成功達成 ${data.counter} 下 ${data.exercise_name}，體力爆發！`);
+                                        celebUtterance.lang = 'zh-TW';
+                                        celebUtterance.rate = 1.1;
+                                        window.speechSynthesis.speak(celebUtterance);
+                                    }
+                                } else {
+                                    playPingSound(false);
+                                }
                             }
                         }
 
@@ -442,13 +448,12 @@
                             }
                         }
 
-                        // 同步自動辨識動作到選單
+                        // 同步自動辨識動作
                         if (data.exercise_name) {
                             for (let i = 0; i < exerciseSelector.options.length; i++) {
                                 if (exerciseSelector.options[i].value.includes(data.exercise_name)) {
                                     if (exerciseSelector.selectedIndex !== i) {
                                         exerciseSelector.selectedIndex = i;
-                                        // 自動辨識切換時，前端也順便將計數看板清空，重新計算新動作
                                         countText.innerText = "0";
                                     }
                                     break;
