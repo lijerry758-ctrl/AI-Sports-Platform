@@ -3,118 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>跨平台 AI 智慧語音健身教練</title>
+    <title>AI 智慧健身教練 - 頂級科技感特裝版</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
+        /* 🌌 全域高階科技深色底 */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #1e272e;
-            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0b0f19;
+            color: #e5e7eb;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
         }
         .container {
-            max-width: 640px;
+            max-width: 700px;
             width: 100%;
             text-align: center;
         }
+        
+        /* ⚡ 炫酷科技感霓虹標題 */
         h1 {
-            color: #00d2d3;
-            font-size: 24px;
-            margin-bottom: 10px;
+            color: #00f2fe;
+            font-size: 28px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
         }
+        .subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        /* 🎛️ 控制面板精緻化 */
         .control-panel {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 20px;
+            margin-bottom: 20px;
+            background: rgba(31, 41, 55, 0.6);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
             flex-wrap: wrap;
         }
-        select {
-            padding: 10px 15px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 5px;
-            background-color: #2f3542;
-            color: #00d2d3;
-            border: 2px solid #00d2d3;
-            cursor: pointer;
+        label, .switch-container {
+            font-size: 15px;
+            font-weight: 600;
+            color: #9ca3af;
         }
+        select {
+            padding: 10px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            background-color: #111827;
+            color: #00f2fe;
+            border: 1px solid #00f2fe;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px rgba(0, 242, 254, 0.2);
+        }
+        select:hover {
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+        }
+
+        /* 🔊 語音與開關美化 */
         .switch-container {
-            font-size: 16px;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            cursor: pointer;
         }
+        #voice-toggle {
+            width: 16px;
+            height: 16px;
+            accent-color: #00f2fe;
+        }
+
+        /* ⏸️ 暫停按鈕升級 */
         .btn-pause {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 10px 22px;
+            font-size: 15px;
             font-weight: bold;
-            border-radius: 5px;
+            border-radius: 8px;
             border: none;
             cursor: pointer;
-            background-color: #ffa502;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .btn-pause.running {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
             color: white;
         }
-        .btn-pause.running { background-color: #ffa502; }
-        .btn-pause.paused { background-color: #2ed573; }
+        .btn-pause.running:hover {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+        }
+        .btn-pause.paused {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .btn-pause.paused:hover {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        /* 🎥 核心視訊外框：自帶呼吸霓虹燈效（預設冷光藍） */
         .video-container {
             position: relative;
             width: 100%;
-            max-width: 640px;
-            background-color: #3d3d3d;
-            border: 3px dashed #00d2d3;
-            border-radius: 8px;
+            background-color: #111827;
+            border-radius: 16px;
             overflow: hidden;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            border: 2px solid #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+            transition: all 0.4s ease;
         }
         #webcam { display: none; }
         #output_canvas { width: 100%; height: auto; display: block; }
+
+        /* 📊 超級科技感跑車儀表板 */
         .dashboard {
-            background-color: #2f3542;
-            padding: 15px;
-            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(22, 28, 45, 0.8), rgba(17, 24, 39, 0.8));
+            padding: 20px;
+            border-radius: 16px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 15px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .row { display: flex; justify-content: space-around; width: 100%; }
-        .data-card { text-align: center; flex: 1; }
-        .data-value { font-size: 24px; font-weight: bold; color: #ffff2e; margin-top: 5px; }
+        .row { display: flex; justify-content: space-around; width: 100%; gap: 15px; }
+        .data-card {
+            background: rgba(31, 41, 55, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+            flex: 1;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+        }
+        .data-title {
+            font-size: 13px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* 🚨 數據大字體動態效果 */
+        .data-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fbbf24;
+            margin-top: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+        
+        /* 💬 即時 AI 語音反饋字框 */
+        .feedback-container {
+            width: 100%;
+        }
         .feedback-value {
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
-            color: #00d2d3;
-            background-color: #1e222b;
-            padding: 12px;
-            border-radius: 5px;
+            color: #00f2fe;
+            background-color: #0f172a;
+            padding: 16px;
+            border-radius: 12px;
             margin-top: 5px;
+            border: 1px solid rgba(0, 242, 254, 0.2);
+            text-shadow: 0 0 8px rgba(0, 242, 254, 0.2);
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
         }
-        .btn {
+
+        /* ↩️ 返回按鈕精美化 */
+        .btn-back {
             display: inline-block;
-            padding: 12px 24px;
-            background-color: #ff4757;
-            color: white;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #374151, #1f2937);
+            color: #9ca3af;
             text-decoration: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-weight: bold;
-            width: 80%;
-            max-width: 200px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            width: 60%;
+            max-width: 180px;
+        }
+        .btn-back:hover {
+            color: white;
+            background: linear-gradient(135deg, #4b5563, #374151);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>AI 智慧健身教練 (即時語音版)</h1>
+        <h1>AI Cyber Coach</h1>
+        <div class="subtitle">實時運動幾何姿態智慧診斷系統</div>
         
         <div class="control-panel">
-            <span style="font-weight: bold; color: #00d2d3;">目前偵測項目：</span>
+            <span style="font-weight: bold; color: #00f2fe;">🔍 偵測項目：</span>
             <select id="exercise-selector">
                 <option value="深蹲 (Squat)">🏋️ 深蹲 (Squat)</option>
                 <option value="伏地挺身 (Pushup)">💪 伏地挺身 (Pushup)</option>
@@ -136,7 +234,7 @@
             <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
         </div>
 
-        <div class="video-container">
+        <div id="video-box" class="video-container">
             <video id="webcam" autoplay playsinline></video>
             <canvas id="output_canvas" width="640" height="480"></canvas>
         </div>
@@ -144,25 +242,27 @@
         <div class="dashboard">
             <div class="row">
                 <div class="data-card">
-                    <div>AI 判定狀態</div>
-                    <div id="pose-status" class="data-value">相機啟動中...</div>
+                    <div class="data-title">AI 引擎判定狀態</div>
+                    <div id="pose-status" class="data-value" style="color: #6b7280;">系統啟動中...</div>
                 </div>
                 <div class="data-card">
-                    <div>當前核心角度</div>
+                    <div class="data-title">當前核心角度</div>
                     <div id="knee-angle" class="data-value">--°</div>
                 </div>
             </div>
-            <div class="data-card" style="width: 100%;">
-                <div id="ai-feedback" class="feedback-value">等待偵測數據...</div>
+            <div class="feedback-container">
+                <div class="data-title" style="text-align: left; margin-left: 5px; margin-bottom: 5px;">🤖 即時教練引導指令</div>
+                <div id="ai-feedback" class="feedback-value">等待分析核心幾何數據...</div>
             </div>
         </div>
 
-        <a href="/" class="btn">返回主頁</a>
+        <a href="/" class="btn-back">返回主頁</a>
     </div>
 
     <script>
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('output_canvas');
+        const videoBox = document.getElementById('video-box'); 
         const canvasCtx = canvasElement.getContext('2d');
         const statusText = document.getElementById('pose-status');
         const angleText = document.getElementById('knee-angle');
@@ -178,21 +278,16 @@
         let lastSpeakTime = 0;
         const SPEAK_INTERVAL = 3000; 
 
-        // 🚀 武器 A：初始化關節座標緩衝滑動矩陣（用來存前 3 幀的歷史數據）
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🚀 武器 A：小白萬用平滑濾波器函數
+        // 🚀 三幀滑動平均濾波器，燙平骨架抖動
         function smoothLandmarks(currentLandmarks) {
             landmarkHistory.push(currentLandmarks);
             if (landmarkHistory.length > SMOOTH_FRAMES) {
-                landmarkHistory.shift(); // 丟掉最舊的一幀
+                landmarkHistory.shift(); 
             }
-
-            // 用第一幀當作複製模板
             let smoothed = JSON.parse(JSON.stringify(currentLandmarks));
-            
-            // 將這 3 幀的每一個關節點的 X、Y 座標通通加起來平均
             for (let i = 0; i < smoothed.length; i++) {
                 let sumX = 0, sumY = 0;
                 for (let j = 0; j < landmarkHistory.length; j++) {
@@ -205,16 +300,14 @@
             return smoothed;
         }
 
-        // 🔊 智慧型語音控制：新增「阻斷過期語音」功能
+        // 🔊 語音控制核心，包含即時中斷與白話指令
         function speakFeedback(rawText) {
             if (!voiceToggle.checked || isPaused) return;
 
-            // 🚀 武器 C：如果後端判定「已經標準」了，立刻強制中斷所有正在排隊或朗讀中的錯誤警告！
+            // 🚀 語音即時阻斷機制：變回標準時立刻切斷警告
             if (rawText === "標準") {
                 if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel(); // 斬斷過期語音！
-                    
-                    // 貼心地輕聲讚賞一聲，代表現在姿勢很棒！
+                    window.speechSynthesis.cancel(); 
                     const praise = new SpeechSynthesisUtterance("做得好");
                     praise.lang = 'zh-TW';
                     praise.rate = 1.2;
@@ -227,7 +320,6 @@
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
 
-                // 為了乾脆俐落，精簡化語音發音
                 let finalText = rawText;
                 const match = rawText.match(/\d+/);
                 const degrees = match ? match[0] : "";
@@ -240,7 +332,7 @@
 
                 const utterance = new SpeechSynthesisUtterance(finalText);
                 utterance.lang = 'zh-TW';
-                utterance.rate = 1.2; // 語速稍微加快，聽起來更即時
+                utterance.rate = 1.2; 
                 window.speechSynthesis.speak(utterance);
             }
         }
@@ -256,19 +348,15 @@
             }
 
             if (results.poseLandmarks) {
-                statusText.innerText = "偵測到人體！";
-                statusText.style.color = "#2ecc71";
-
-                // 🚀 武器 A：通電！強迫將原始抖動骨架丟進濾波器洗乾淨
                 const stableLandmarks = smoothLandmarks(results.poseLandmarks);
                 
-                // 畫出燙平後的完美紅色骨架點
+                // 畫出科技感發光青藍色骨架點
                 for (const landmark of stableLandmarks) {
                     const x = landmark.x * canvasElement.width;
                     const y = landmark.y * canvasElement.height;
                     canvasCtx.beginPath();
-                    canvasCtx.arc(x, y, 5, 0, 2 * Math.PI);
-                    canvasCtx.fillStyle = '#ff4757';
+                    canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
+                    canvasCtx.fillStyle = '#00f2fe'; 
                     canvasCtx.fill();
                 }
 
@@ -309,19 +397,26 @@
                         angleText.innerText = `${data.current_knee_angle}°`;
 
                         if (data.is_valid) {
-                            feedbackText.innerText = "姿勢非常標準，請繼續保持！";
-                            feedbackText.style.color = "#2ecc71";
+                            feedbackText.innerText = "🔥 姿勢非常標準，請繼續保持！";
+                            feedbackText.style.color = "#10b981"; 
                             statusText.innerText = data.status;
-                            statusText.style.color = "#2ecc71";
+                            statusText.style.color = "#10b981";
                             
-                            // 🚀 觸發語音阻斷：告訴音響立刻閉嘴改唸「做得好」
+                            // 🚀 霓虹大整容：標準時外框亮綠光
+                            videoBox.style.border = "2px solid #10b981";
+                            videoBox.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.6)";
+
                             speakFeedback("標準");
                         } else {
-                            feedbackText.innerText = data.feedback;
-                            feedbackText.style.color = "#ff4757";
+                            feedbackText.innerText = `⚠️ ${data.feedback}`;
+                            feedbackText.style.color = "#ef4444"; 
                             statusText.innerText = data.status;
-                            statusText.style.color = "#ff4757";
+                            statusText.style.color = "#ef4444";
                             
+                            // 🚀 霓虹大整容：不標準時外框亮紅光
+                            videoBox.style.border = "2px solid #ef4444";
+                            videoBox.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.6)";
+
                             if (data.feedback) {
                                 speakFeedback(data.feedback);
                             }
@@ -344,10 +439,12 @@
 
             } else {
                 statusText.innerText = "尋找人體中...";
-                statusText.style.color = "#ffff2e";
+                statusText.style.color = "#6b7280";
                 angleText.innerText = "--°";
-                feedbackText.innerText = "等待偵測數據...";
-                feedbackText.style.color = "#00d2d3";
+                feedbackText.innerText = "等待分析核心幾何數據...";
+                feedbackText.style.color = "#00f2fe";
+                videoBox.style.border = "2px solid #00f2fe";
+                videoBox.style.boxShadow = "0 0 20px rgba(0, 242, 254, 0.25)";
             }
             canvasCtx.restore();
         }
@@ -358,12 +455,14 @@
                 pauseButton.innerText = "▶️ 恢復偵測";
                 pauseButton.className = "btn-pause paused";
                 statusText.innerText = "偵測已暫停";
-                statusText.style.color = "#ffa502";
+                statusText.style.color = "#f59e0b";
+                videoBox.style.border = "2px solid #f59e0b";
+                videoBox.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
             } else {
                 pauseButton.innerText = "⏸️ 暫停偵測";
                 pauseButton.className = "btn-pause running";
                 statusText.innerText = "恢復偵測中...";
-                statusText.style.color = "#2ecc71";
+                statusText.style.color = "#10b981";
             }
         });
 
