@@ -251,13 +251,40 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🎯 補齊五大核心動作的開源 3D 動畫與醫學衛教 FAQ 資料庫
+        // 🎯 補齊選單中所有 11 項動作的開源 3D 動畫與醫學衛教 FAQ 完全體資料庫
         const EXERCISE_GUIDE_DB = {
+            // 🦵 下肢與核心訓練
             "深蹲": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
                 audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。",
                 faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。"
             },
+            "弓箭步": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif",
+                audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。",
+                faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。"
+            },
+            "橋式": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Glute-Bridge.gif",
+                audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。",
+                faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。"
+            },
+            "俄羅斯轉體": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/04/Russian-Twist.gif",
+                audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。",
+                faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。"
+            },
+            "捲腹": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Crunch.gif",
+                audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。",
+                faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。"
+            },
+            "棒式支撐": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Plank.gif",
+                audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。",
+                faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。"
+            },
+            // 💪 上肢與胸背爆發
             "伏地挺身": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif",
                 audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
@@ -268,15 +295,20 @@
                 audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。",
                 faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。"
             },
-            "弓箭步": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif",
-                audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。",
-                faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是群中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。"
+            "引體向上": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif",
+                audio: "雙手略寬於肩正握單槓，背括肌發力將身體往上拉，直到下巴超過單槓，隨後緩慢控制下放速度。",
+                faq: "<strong>Q: 拉上去時脖子僵硬、手臂爆酸？</strong><br>💡 A: 這是聳肩且過度用二頭肌死拉。請想像把「手肘往褲子後口袋塞」，強迫背部發力。"
             },
-            "棒式支撐": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Plank.gif",
-                audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。",
-                faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。"
+            "波比跳": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/03/Burpee.gif",
+                audio: "下蹲雙手撐地，雙腳向後跳躍呈伏地挺身姿，完成一下伏地挺身後往前跳回下蹲姿，隨後垂直爆發向上跳躍。",
+                faq: "<strong>Q: 跳到後面喘不過氣、動作散掉、腰很酸？</strong><br>💡 A: 這是核心潰散。雙腳往後跳時肚子一定要用力收緊，避免骨盆像自由落體一樣砸向地面摔傷腰椎。"
+            },
+            "登山者": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/06/Mountain-Climber.gif",
+                audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。",
+                faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。"
             }
         };
 
