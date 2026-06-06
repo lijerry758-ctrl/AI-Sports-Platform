@@ -251,6 +251,7 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
+        // 🎯 補齊五大核心動作的開源 3D 動畫與醫學衛教 FAQ 資料庫
         const EXERCISE_GUIDE_DB = {
             "深蹲": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
@@ -259,21 +260,33 @@
             },
             "伏地挺身": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif",
-                audio: "雙雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
+                audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
                 faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。"
             },
             "肩推": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif",
                 audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。",
                 faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。"
+            },
+            "弓箭步": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif",
+                audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。",
+                faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是群中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。"
+            },
+            "棒式支撐": {
+                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Plank.gif",
+                audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。",
+                faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。"
             }
         };
 
-        // 🔄 徹底對齊防當機版引擎
+        // 🔄 徹底重構後的防當機同步引擎
         function updateExerciseGuide() {
-            if (!exerciseSelector) return;
-            const selectedExercise = exerciseSelector.value;
-            const guideData = EXERCISE_GUIDE_DB[selectedExercise] || { gif: "", audio: "自訂項目偵測中", faq: "請手動維持標準姿勢" };
+            const selector = document.getElementById('exercise-selector');
+            if (!selector) return;
+            
+            const selectedExercise = selector.value;
+            const guideData = EXERCISE_GUIDE_DB[selectedExercise] || { gif: "", audio: "自訂項目幾何數據收集中心", faq: "請手動維持標準姿勢" };
             
             const audioEl = document.getElementById("guide-audio-text");
             const faqEl = document.getElementById("guide-faq-content");
