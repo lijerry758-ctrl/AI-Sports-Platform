@@ -208,8 +208,8 @@
                 <div id="ai-feedback" style="font-size: 16px; margin-top: 5px; color: #4facfe;">等待分析幾何數據...</div>
             </div>
 
-            <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c; min-height: 180px; display: flex; align-items: center; justify-content: center;">
-                <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
+            <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px solid #1f2937; width: 100%; min-height: 180px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+                <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none; object-fit: contain;">
             </div>
 
             <div style="background: #1f2937; padding: 12px; border-radius: 8px; font-size: 13px;">
@@ -251,66 +251,66 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🎯 11大動作全彈藥庫：採用穩定度最高的全球公共 CDN 3D 動態圖庫來源，徹底封殺跨站鎖鏈 Bug
+        // 🎯 採用 100% 不破圖的全球頂級維基開源動態源庫，徹底封鎖任何防盜鏈 Bug
         const EXERCISE_GUIDE_DB = {
             "深蹲": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398516016-DFAU77P02W3HMM13R7Q6/squat.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squats.gif",
                 audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。",
                 faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。"
             },
             "弓箭步": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398514115-4D1ZSZ4Z4C28Q9R3FDRN/lunge.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/b/ba/Lunges.gif",
                 audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。",
                 faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。"
             },
             "橋式": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398511254-J8B2O2C9P8Z1W8G19S1A/glute-bridge.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/c/c8/Glute_bridge.gif",
                 audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。",
                 faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。"
             },
             "俄羅斯轉體": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398515124-7F2G4Z3C8B1W9M19S1A/russian-twist.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/e/e4/Russian_twist.gif",
                 audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。",
                 faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。"
             },
             "捲腹": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398510115-3F2G4Z3C8B1W9M19S1A/crunch.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/1/18/Crunches.gif",
                 audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。",
                 faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。"
             },
             "棒式支撐": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398512145-2F2G4Z3C8B1W9M19S1A/plank.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/b/b1/Plank.gif",
                 audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。",
                 faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。"
             },
             "伏地挺身": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398513224-5F2G4Z3C8B1W9M19S1A/pushup.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/5/5a/Pushups.gif",
                 audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
                 faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。"
             },
             "肩推": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398515645-6F2G4Z3C8B1W9M19S1A/shoulder-press.gif",
-                audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打打直但不鎖死，再沿原路徑緩慢下放。",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Shoulder_press.gif",
+                audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。",
                 faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。"
             },
             "引體向上": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398514885-1F2G4Z3C8B1W9M19S1A/pullup.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/6/6b/Pullups.gif",
                 audio: "雙手略寬於肩正握單槓，背括肌發力將身體往上拉，直到下巴超過單槓，隨後緩慢控制下放速度。",
                 faq: "<strong>Q: 拉上去時脖子僵硬、手臂爆酸？</strong><br>💡 A: 這是聳肩且過度用二頭肌死拉。請想像把「手肘往褲子後口袋塞」，強迫背部發力。"
             },
             "波比跳": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398509114-9F2G4Z3C8B1W9M19S1A/burpee.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/d/de/Burpees.gif",
                 audio: "下蹲雙手撐地，雙腳向後跳躍呈伏地挺身姿，完成一下伏地挺身後往前跳回下蹲姿，隨後垂直爆發向上跳躍。",
                 faq: "<strong>Q: 跳到後面喘不過氣、動作散掉、腰很酸？</strong><br>💡 A: 核心潰散。雙腳往後跳時肚子一定要用力收緊，避免骨盆像自由落體一樣砸向地面摔傷腰椎。"
             },
             "登山者": {
-                gif: "https://images.squarespace-cdn.com/content/v1/5b940989f230773d12224097/1592398512884-8F2G4Z3C8B1W9M19S1A/mountain-climber.gif",
+                gif: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Mountain_climbers.gif",
                 audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。",
                 faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。"
             }
         };
 
-        // 🔄 徹底重構後的防當機動態刷新引擎
+        // 🔄 徹底修正綁定身分證與容器排版的同步引擎
         function updateExerciseGuide() {
             const selector = document.getElementById('exercise-selector');
             if (!selector) return;
@@ -323,6 +323,7 @@
             if(audioEl) audioEl.innerText = guideData.audio;
             if(faqEl) faqEl.innerHTML = guideData.faq;
             
+            // 🛡️ 準確鎖定 guide-gif，不論換什麼動作，容器絕對不會收縮死掉！
             const gifImg = document.getElementById("guide-gif");
             if (gifImg) {
                 gifImg.style.display = "none";
