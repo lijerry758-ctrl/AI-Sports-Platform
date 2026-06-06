@@ -4,11 +4,11 @@ import math
 app = Flask(__name__)
 app.secret_key = "cyberfit_fujen_secret_key"
 
-# 🛠️ 全域運動計數與狀態資料庫
+# 🛠️ 全域運動計數與狀態資料庫（11大動作商用大滿貫架構）
 COUNTER_DB = {
     "counter": 0,
     "status": "就位準備",
-    "stage": "up",
+    "stage": "up",  # 用於記錄動作行程階段 (up / down / left / right / jump)
     "mode": "reps"
 }
 
@@ -25,7 +25,6 @@ def calculate_angle(p1, p2, p3):
 
 @app.route('/')
 def index():
-    # 這裡維持對齊 detection.html 主偵測艙
     return render_template('detection.html', username=session.get('username', '訪客'))
 
 @app.route('/dashboard')
@@ -35,7 +34,7 @@ def dashboard():
 @app.route('/api/reset_counter', methods=['POST'])
 def reset_counter():
     COUNTER_DB["counter"] = 0
-    COUNTER_DB["stage"] = "up"
+    COUNTER_DB["stage"] = "center" if "stage" in COUNTER_DB else "up"
     COUNTER_DB["status"] = "數據已重置"
     return jsonify({"counter": 0, "status": "數據已重置"})
 
@@ -55,10 +54,10 @@ def analyze():
     play_ping = False
     
     # =========================================================================
-    # ⚙️ 方案 A 鎖定判定邏輯 ── 依據前端選單，雷打不動只執行該動作的公式
+    # ⚙️ 方案 A 鎖定機制：11 大核心動作精準判定房間，徹底杜絕狀態交叉污染
     # =========================================================================
     
-    # 1. 🦵 下肢與臀腿：深蹲 (Squat)
+    # 1. 深蹲 (Squat)
     if exercise == "深蹲":
         if hp and kn and ak:
             current_angle = calculate_angle(hp, kn, ak)
@@ -73,15 +72,100 @@ def analyze():
                 COUNTER_DB["stage"] = "down"
                 feedback = "標準深度！穩住核心"
             else:
-                if COUNTER_DB["stage"] == "down":
-                    feedback = "正在站起..."
-                else:
-                    feedback = f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
-                    if current_angle > 140: is_valid = False
+                feedback = "標準" if COUNTER_DB["stage"] == "down" else f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
         else:
-            feedback = "⚠️ 偵測提示：請將下肢、膝蓋與腳踝退至鏡頭內"
+            feedback = "⚠️ 請將下肢、膝蓋與腳踝退至鏡頭內"
 
-    # 2. 🧘 上肢與胸背：伏地挺身 (Pushup)
+    # 2. 弓箭步 (Lunge)
+    elif exercise == "弓箭步":
+        if hp and kn and ak:
+            current_angle = calculate_angle(hp, kn, ak)
+            if current_angle > 160:
+                COUNTER_DB["status"] = "雙腳站立準備"
+                if COUNTER_DB["stage"] == "down":
+                    COUNTER_DB["stage"] = "up"
+                    COUNTER_DB["counter"] += 1
+                    play_ping = True
+            elif current_angle < 110:
+                COUNTER_DB["status"] = "跨步下蹲狀態"
+                COUNTER_DB["stage"] = "down"
+                feedback = "核心收緊，骨盆垂直下壓成功"
+            else:
+                feedback = "請繼續保持跨步蹲幅"
+        else:
+            feedback = "⚠️ 請側身面向鏡頭，露出完整的髖、膝、踝點"
+
+    # 3. 橋式 (Glute Bridge)
+    elif exercise == "橋式":
+        if sh and hp and kn:
+            current_angle = calculate_angle(sh, hp, kn)
+            if current_angle > 165:
+                COUNTER_DB["status"] = "臀部頂峰收縮"
+                if COUNTER_DB["stage"] == "down":
+                    COUNTER_DB["stage"] = "up"
+                    COUNTER_DB["counter"] += 1
+                    play_ping = True
+                    feedback = "夾緊臀部，動作非常標準！"
+            elif current_angle < 130:
+                COUNTER_DB["status"] = "臀部下放預備"
+                COUNTER_DB["stage"] = "down"
+        else:
+            feedback = "⚠️ 請躺姿側對鏡頭，確保肩膀到膝蓋在畫面內"
+
+    # 4. 俄羅斯轉體 (Russian Twist)
+    elif exercise == "俄羅斯轉體":
+        if sh and wr and hp:
+            wrist_relative_x = wr[0] - hp[0]
+            if wrist_relative_x < -0.15:
+                COUNTER_DB["status"] = "向左側扭轉觸地"
+                if COUNTER_DB["stage"] in ["right", "center", "up"]:
+                    COUNTER_DB["stage"] = "left"
+                    COUNTER_DB["counter"] += 1
+                    play_ping = True
+            elif wrist_relative_x > 0.15:
+                COUNTER_DB["status"] = "向右側扭轉觸地"
+                if COUNTER_DB["stage"] in ["left", "center", "up"]:
+                    COUNTER_DB["stage"] = "right"
+                    COUNTER_DB["counter"] += 1
+                    play_ping = True
+            else:
+                COUNTER_DB["status"] = "轉體正中轉折"
+                feedback = "核心拉緊，運用腹外斜肌左右交替帶動"
+        else:
+            feedback = "⚠️ 請坐姿面對鏡頭，確保雙手手腕與骨盆露出"
+
+    # 5. 捲腹 (Crunch)
+    elif exercise == "捲腹":
+        if sh and hp and kn:
+            current_angle = calculate_angle(sh, hp, kn)
+            if current_angle < 135:
+                COUNTER_DB["status"] = "腹肌腹直肌擠壓"
+                if COUNTER_DB["stage"] == "down":
+                    COUNTER_DB["stage"] = "up"
+                    COUNTER_DB["counter"] += 1
+                    play_ping = True
+                    feedback = "核心捲起到位！"
+            elif current_angle > 155:
+                COUNTER_DB["status"] = "平躺預備狀態"
+                COUNTER_DB["stage"] = "down"
+        else:
+            feedback = "⚠️ 請側躺迎向鏡頭，以便 AI 計算軀幹折疊角度"
+
+    # 6. 棒式支撐 (Plank)
+    elif exercise == "棒式支撐":
+        if sh and hp and kn:
+            current_angle = calculate_angle(sh, hp, kn)
+            if 160 <= current_angle <= 200:
+                COUNTER_DB["status"] = "完美棒式直線"
+                feedback = "核心持續發力，姿勢極度標準！"
+            else:
+                COUNTER_DB["status"] = "無效不良姿勢"
+                is_valid = False
+                feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
+        else:
+            feedback = "⚠️ 請側面對鏡頭，以便AI計算身體直線度"
+
+    # 7. 伏地挺身 (Pushup)
     elif exercise == "伏地挺身":
         if sh and el and wr:
             current_angle = calculate_angle(sh, el, wr)
@@ -92,19 +176,13 @@ def analyze():
                     COUNTER_DB["counter"] += 1
                     play_ping = True
             elif current_angle < 90:
-                COUNTER_DB["status"] = "下壓極限"
+                COUNTER_DB["status"] = "下壓胸大肌拉伸"
                 COUNTER_DB["stage"] = "down"
-                feedback = "胸大肌極限拉伸，標準！"
-            else:
-                if COUNTER_DB["stage"] == "down":
-                    feedback = "正在推起軀幹..."
-                else:
-                    feedback = f"下壓深度不夠，手肘請再彎曲 {current_angle - 90}°"
-                    if current_angle > 130: is_valid = False
+                feedback = "標準！"
         else:
-            feedback = "⚠️ 偵測提示：請將上半身、手肘與手腕完整對準鏡頭"
+            feedback = "⚠️ 請將上半身、手肘與手腕完整對準鏡頭"
 
-    # 3. 🏋️ 上肢與胸背：肩推 (Press)
+    # 8. 肩推 (Press)
     elif exercise == "肩推":
         if sh and el and wr:
             current_angle = calculate_angle(sh, el, wr)
@@ -117,55 +195,49 @@ def analyze():
             elif current_angle < 85:
                 COUNTER_DB["status"] = "手肘下放準備"
                 COUNTER_DB["stage"] = "down"
-                feedback = "動作到位，準備垂直上推"
-            else:
-                if COUNTER_DB["stage"] == "down":
-                    feedback = "正往上推舉..."
-                else:
-                    feedback = f"手肘下放幅度不足，請再往下降 {current_angle - 85}°"
         else:
-            feedback = "⚠️ 偵測提示：請確保兩側肩膀與雙手手肘在畫面內"
+            feedback = "⚠️ 請確保兩側肩膀與雙手手肘在畫面內"
 
-    # 4. 🦵 下肢與臀腿：弓箭步 (Lunge) - 使用雙腿夾角判定
-    elif exercise == "弓箭步":
-        if hp and kn and ak:
-            current_angle = calculate_angle(hp, kn, ak)
-            if current_angle > 160:
-                COUNTER_DB["status"] = "雙腳站立準備"
+    # 9. 引體向上 (Pullup)
+    elif exercise == "引體向上":
+        if sh and el and wr:
+            current_angle = calculate_angle(sh, el, wr)
+            if current_angle < 90:
+                COUNTER_DB["status"] = "背括肌拉至頂峰"
                 if COUNTER_DB["stage"] == "down":
                     COUNTER_DB["stage"] = "up"
                     COUNTER_DB["counter"] += 1
                     play_ping = True
-            elif current_angle < 105:
-                COUNTER_DB["status"] = "前後腿跨步下蹲"
+            elif current_angle > 150:
+                COUNTER_DB["status"] = "懸吊雙臂打直"
                 COUNTER_DB["stage"] = "down"
-                feedback = "核心收緊，骨盆垂直下壓成功"
-            else:
-                feedback = f"跨步蹲深度不夠，前膝請再微蹲"
         else:
-            feedback = "⚠️ 偵測提示：請側身面向鏡頭，露出完整的髖、膝、踝點"
+            feedback = "⚠️ 請確保單槓與上半身雙手關節皆在鏡頭內"
 
-    # 5. ⏱️ 核心與腹肌：棒式支撐 (Plank) - 計時模式範例 (角度防代償判定)
-    elif exercise == "棒式支撐":
+    # 10. 波比跳 (Burpee)
+    elif exercise == "波比跳":
         if sh and hp and kn:
-            current_angle = calculate_angle(sh, hp, kn) # 計算髖關節是否呈一直線
-            if 160 <= current_angle <= 200:
-                COUNTER_DB["status"] = "完美棒式直線"
-                feedback = "核心持續發力，姿勢非常標準！"
+            if hp[1] > 0.75:  # 髖關節座標極低，代表趴下伏地
+                COUNTER_DB["status"] = "地面俯臥挺身中"
+                COUNTER_DB["stage"] = "down"
+            elif hp[1] < 0.45 and COUNTER_DB["stage"] == "down": # 髖關節突然拉高，代表往上爆發跳躍
+                COUNTER_DB["status"] = "垂直爆發躍起"
+                COUNTER_DB["stage"] = "jump"
+                COUNTER_DB["counter"] += 1
+                play_ping = True
             else:
-                COUNTER_DB["status"] = "無效姿勢"
-                is_valid = False
-                if current_angle < 160:
-                    feedback = "🚨 警告：塌腰代償！請用力縮肚子把下背補平"
-                else:
-                    feedback = "🚨 警告：皮股抬得太高了！身體請壓回一直線"
+                feedback = "下蹲趴下，隨後起身垂直跳躍！"
         else:
-            feedback = "⚠️ 偵測提示：請將身體側面向鏡頭，以便AI計算身體直線度"
+            feedback = "⚠️ 波比跳需要全身大範圍移動，請將鏡頭退遠"
 
-    # 6. 安全防禦：如果選了其他尚未寫入公式的自訂動作
-    else:
-        COUNTER_DB["status"] = f"{exercise} 偵測中"
-        feedback = "自訂項目幾何數據收集中心，請保持姿勢規律性"
+    # 11. 登山者 (Climbers)
+    elif exercise == "登山者":
+        if kn and hp:
+            current_angle = calculate_angle(hp, kn, ak) if ak else 180
+            COUNTER_DB["status"] = "雙腿高速登山提膝"
+            feedback = "有氧燃脂爆發中！維持頻率"
+        else:
+            feedback = "⚠️ 請俯臥撐姿側對鏡頭，露出雙腿提膝關節"
 
     return jsonify({
         "counter": COUNTER_DB["counter"],
