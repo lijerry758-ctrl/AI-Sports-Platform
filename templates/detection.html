@@ -2,283 +2,230 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 智慧健身教練 - 頂級科技感特裝版</title>
+    <title>⚡ CyberFit 賽博 AI 運動艙</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #0b0f19;
-            color: #e5e7eb;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
-            padding: 15px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
-        .container {
-            max-width: 700px;
+        .header-container {
             width: 100%;
-            text-align: center;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #1f2937;
+            padding-bottom: 15px;
         }
         h1 {
-            color: #00f2fe;
+            margin: 0;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             font-size: 28px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
         }
-        .subtitle {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 20px;
-        }
-        .control-panel {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-            background: rgba(31, 41, 55, 0.6);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            flex-wrap: wrap;
-        }
-        select {
-            padding: 10px 18px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            background-color: #111827;
-            color: #00f2fe;
-            border: 1px solid #00f2fe;
-            cursor: pointer;
-            outline: none;
-        }
-        .switch-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-        #voice-toggle {
-            width: 16px;
-            height: 16px;
-            accent-color: #00f2fe;
-        }
-        .btn-pause {
-            padding: 10px 22px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-pause.running { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
-        .btn-pause.paused { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-        
-        .btn-reset {
-            padding: 10px 18px;
-            font-size: 14px;
-            font-weight: bold;
-            border-radius: 8px;
-            border: none;
-            background: linear-gradient(135deg, #dc2626, #991b1b);
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .btn-reset:hover { box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); }
-
-        .target-input-box {
-            width: 55px;
-            padding: 8px;
-            border-radius: 6px;
+        .user-panel {
             background: #111827;
-            color: #00f2fe;
-            border: 1px solid #00f2fe;
-            font-weight: bold;
-            text-align: center;
-            outline: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid #3b3b5c;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-
-        .video-container {
-            position: relative;
+        .btn-nav-dashboard {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            border: none;
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+        .btn-nav-dashboard:hover {
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+        }
+        .main-layout {
+            display: flex;
+            gap: 25px;
             width: 100%;
-            background-color: #111827;
-            border-radius: 16px;
+            max-width: 1200px;
+            justify-content: center;
+        }
+        .left-box {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #video-box {
+            position: relative;
+            width: 640px;
+            height: 480px;
+            background: #000;
+            border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 20px;
             border: 2px solid #00f2fe;
             box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
-            transition: all 0.4s ease;
         }
-        #webcam { display: none; }
-        #output_canvas { width: 100%; height: auto; display: block; }
-
-        .dashboard {
-            background: linear-gradient(180deg, rgba(22, 28, 45, 0.8), rgba(17, 24, 39, 0.8));
+        video, canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 640px;
+            height: 480px;
+        }
+        video { transform: scaleX(-1); visibility: hidden; }
+        canvas { transform: scaleX(-1); }
+        .right-box {
+            flex: 0.8;
+            background: #111827;
+            border-radius: 12px;
             padding: 20px;
-            border-radius: 16px;
+            border: 1px solid #1f2937;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
         }
-        .row { display: flex; justify-content: space-around; width: 100%; gap: 12px; }
-        .data-card {
-            background: rgba(31, 41, 55, 0.4);
-            padding: 12px;
-            border-radius: 12px;
-            flex: 1;
-            border: 1px solid rgba(255, 255, 255, 0.02);
+        .control-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
-        .counter-card {
-            background: rgba(0, 242, 254, 0.1);
-            border: 1px solid rgba(0, 242, 254, 0.3);
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+        select, input[type="number"] {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
         }
-        .data-title {
-            font-size: 12px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .data-value {
-            font-size: 30px;
-            font-weight: 800;
-            color: #fbbf24;
-            margin-top: 5px;
-            font-family: 'Courier New', Courier, monospace;
-        }
-        #workout-count {
-            font-size: 42px;
-            color: #00f2fe;
-            text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
-        }
-        .feedback-container { width: 100%; }
-        .feedback-value {
-            font-size: 22px;
-            font-weight: bold;
-            color: #00f2fe;
-            background-color: #0f172a;
-            padding: 16px;
-            border-radius: 12px;
-            margin-top: 5px;
-        }
-        .btn-back {
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #374151, #1f2937);
-            color: #9ca3af;
-            text-decoration: none;
+        .dash-card {
+            background: #1f2937;
+            padding: 15px;
             border-radius: 8px;
+            border-left: 4px solid #00f2fe;
+        }
+        .dash-card.error { border-left-color: #ef4444; }
+        .dash-card.success { border-left-color: #10b981; }
+        .btn-pause {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            color: white;
             font-weight: bold;
-            width: 60%;
-            max-width: 180px;
+            cursor: pointer;
+        }
+        .btn-pause.running { background: #f59e0b; }
+        .btn-pause.paused { background: #10b981; }
+        .btn-reset {
+            background: #374151;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>AI Cyber Coach</h1>
-        <div class="subtitle">實時運動幾何姿態智慧诊断系統</div>
-        
-        <div class="control-panel">
-            <span style="font-weight: bold; color: #00f2fe;">🔍 偵測項目：</span>
-            <select id="exercise-selector">
-                <optgroup label="🦵 下肢 / 臀腿肌群">
-                    <option value="深蹲">🏋️ 深蹲 (Squat)</option>
-                    <option value="弓箭步">🦵 弓箭步 (Lunge)</option>
-                    <option value="橋式">🍑 橋式 (Glute Bridge)</option>
-                </optgroup>
-                <optgroup label="💪 胸、背、肩上肢肌群">
-                    <option value="伏地挺身">💪 伏地挺身 (Pushup)</option>
-                    <option value="引體向上">🧗 引體向上 (Pullup)</option>
-                    <option value="肩推">🏋️ 肩推 (Shoulder Press)</option>
-                </optgroup>
-                <optgroup label="🔥 核心 / 腹肌訓練">
-                    <option value="俄羅斯轉體">🔄 俄羅斯轉體 (Russian Twist)</option>
-                    <option value="捲腹">🍫 捲腹 (Crunch)</option>
-                    <option value="棒式支撐">🧘 棒式支撐 (Plank)</option>
-                </optgroup>
-                <optgroup label="✨ 全身爆發 / 有氧">
-                    <option value="波比跳">💥 波比跳 (Burpee)</option>
-                    <option value="登山者">🧗 登山者 (Mountain Climbers)</option>
-                </optgroup>
-            </select>
 
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <label for="target-count" style="font-size: 14px; font-weight: bold; color: #fbbf24;">🎯 目標:</label>
-                <input type="number" id="target-count" class="target-input-box" value="10" min="1">
-                <select id="mode-selector" style="padding: 5px; font-size: 13px; font-weight: bold; border-radius: 6px; background-color: #111827; color: #00f2fe; border: 1px solid #00f2fe; cursor: pointer;">
-                    <option value="reps">下 (Reps)</option>
-                    <option value="seconds">秒 (Secs)</option>
+    <div class="header-container">
+        <h1>⚡ CyberFit 賽博 AI 運動艙</h1>
+        <div class="user-panel">
+            <span>👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
+            <a href="/dashboard" class="btn-nav-dashboard">📊 進入個人數據控制艙</a>
+        </div>
+    </div>
+
+    <div class="main-layout">
+        <div class="left-box">
+            <div id="video-box">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="output_canvas" width="640" height="480"></canvas>
+            </div>
+        </div>
+
+        <div class="right-box">
+            <div class="control-row">
+                <select id="exercise-selector">
+                    <optgroup label="🦵 下肢與核心訓練">
+                        <option value="深蹲">🏋️ 深蹲 (Squat)</option>
+                        <option value="弓箭步">🦵 弓箭步 (Lunge)</option>
+                        <option value="橋式">🍑 橋式 (Glute Bridge)</option>
+                        <option value="俄羅斯轉體">🔄 俄羅斯轉體 (Twist)</option>
+                        <option value="捲腹">🧘 捲腹 (Crunch)</option>
+                        <option value="棒式支撐">⏱️ 棒式支撐 (Plank)</option>
+                    </optgroup>
+                    <optgroup label="💪 上肢與胸背爆發">
+                        <option value="伏地挺身">🧘 伏地挺身 (Pushup)</option>
+                        <option value="肩推">🏋️ 肩推 (Press)</option>
+                        <option value="引體向上">🦇 引體向上 (Pullup)</option>
+                        <option value="波比跳">🐸 波比跳 (Burpee)</option>
+                        <option value="登山者">🏃 登山者 (Climbers)</option>
+                    </optgroup>
+                </select>
+
+                <select id="mode-selector">
+                    <option value="reps">🎯 計次模式</option>
+                    <option value="seconds">⏱️ 計時模式</option>
                 </select>
             </div>
 
-            <div class="switch-container">
-                <input type="checkbox" id="voice-toggle" checked>
-                <label for="voice-toggle">🔊 開啟語音</label>
+            <div class="control-row">
+                <label style="font-size:14px; color:#9ca3af;">設定目標：</label>
+                <input type="number" id="target-count" value="10" min="1" style="width: 70px;">
+                <label style="font-size:14px; color:#9ca3af; margin-left:15px;">
+                    <input type="checkbox" id="voice-toggle" checked> 🔊 語音修正
+                </label>
             </div>
 
-            <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
-            <button id="reset-button" class="btn-reset">🔄 歸零</button>
-        </div>
+            <div class="dash-card">
+                <div style="font-size: 14px; color: #9ca3af;" id="counter-title">🎯 當前累計次數</div>
+                <div id="workout-count" style="font-size: 48px; font-weight: bold; color: #00f2fe; margin-top: 5px;">0</div>
+            </div>
 
-        <div id="video-box" class="video-container">
-            <video id="webcam" autoplay playsinline></video>
-            <canvas id="output_canvas" width="640" height="480"></canvas>
-        </div>
+            <div class="dash-card success">
+                <div style="font-size: 14px; color: #9ca3af;">🤖 AI 即時狀態判定</div>
+                <div id="pose-status" style="font-size: 20px; font-weight: bold; margin-top: 5px; color: #10b981;">尋找人體中...</div>
+                <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">核心關節夾角: <span id="knee-angle">--°</span></div>
+            </div>
 
-        <div class="dashboard">
-            <div class="row">
-                <div class="data-card">
-                    <div class="data-title">AI 狀態判定</div>
-                    <div id="pose-status" class="data-value" style="color: #6b7280; font-size: 22px;">啟動中...</div>
-                </div>
-                <div class="data-card counter-card">
-                    <div id="counter-title" class="data-title" style="color: #00f2fe; font-weight: bold;">🎯 當前累計次數</div>
-                    <div id="workout-count" class="data-value">0</div>
-                </div>
-                <div class="data-card">
-                    <div class="data-title">當前核心角度</div>
-                    <div id="knee-angle" class="data-value">--°</div>
-                </div>
+            <div class="dash-card" id="feedback-card">
+                <div style="font-size: 14px; color: #9ca3af;">💡 動作教練即時反饋</div>
+                <div id="ai-feedback" style="font-size: 16px; margin-top: 5px; color: #4facfe;">等待分析幾何數據...</div>
             </div>
-            <div class="feedback-container">
-                <div class="data-title" style="text-align: left; margin-left: 5px; margin-bottom: 5px;">🤖 即時教練引導指令</div>
-                <div id="ai-feedback" class="feedback-value">等待分析核心幾何數據...</div>
-            </div>
-        </div>
 
-        <div id="exercise-guide-panel" style="margin-top: 25px; padding: 20px; background: rgba(20, 20, 35, 0.85); border: 1px solid #3b3b5c; border-radius: 12px; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <h3 style="color: #00f2fe; border-bottom: 2px solid #00f2fe; padding-bottom: 8px; margin-top: 0;">📖 動作指導與疑難排解</h3>
-            <div style="text-align: center; margin-bottom: 15px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c;">
-                <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 180px; border-radius: 6px; display: none;">
+            <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c;">
+                <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
             </div>
-            <div style="margin-bottom: 18px;">
-                <h4 style="color: #ffaa00; margin: 8px 0;">💡 30秒動作口述要領：</h4>
-                <p id="guide-audio-text" style="line-height: 1.6; color: #e0e0e0; margin: 0;">正在載入教學引導...</p>
+
+            <div style="background: #1f2937; padding: 12px; border-radius: 8px; font-size: 13px;">
+                <h4 style="color: #ffaa00; margin: 0 0 6px 0;">💡 30秒動作口述要領：</h4>
+                <p id="guide-audio-text" style="color: #e0e0e0; margin: 0 0 10px 0; line-height: 1.4;">載入中...</p>
+                <h4 style="color: #ef4444; margin: 0 0 4px 0;">🚨 常見代償與醫學解法：</h4>
+                <p id="guide-faq-content" style="color: #cbd5e1; margin: 0; line-height: 1.4;">載入中...</p>
             </div>
-            <div>
-                <h4 style="color: #ff4a4a; margin: 8px 0;">🚨 運動常見痛點排查與醫學解法：</h4>
-                <div id="guide-faq-content" style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 8px; border-left: 4px solid #ff4a4a; line-height: 1.6; color: #e5e7eb;">
-                    正在分析動作知識庫...
-                </div>
+
+            <div class="control-row">
+                <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
+                <button id="reset-button" class="btn-reset">🔄 重設數據</button>
             </div>
         </div>
-
-        <br>
-        <a href="/" class="btn-back">返回主頁</a>
     </div>
+
     <script>
         const videoElement = document.getElementById('webcam');
         const canvasElement = document.getElementById('output_canvas');
@@ -289,7 +236,7 @@
         const countText = document.getElementById('workout-count'); 
         const counterTitle = document.getElementById('counter-title'); 
         const feedbackText = document.getElementById('ai-feedback');
-        const exerciseSelector = document.getElementById('exercise-type');
+        const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
         const pauseButton = document.getElementById('pause-button');
         const resetButton = document.getElementById('reset-button'); 
@@ -298,198 +245,104 @@
         let isPaused = false; 
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
-
         let lastSpeakTime = 0;
         const SPEAK_INTERVAL = 3000; 
         let isCelebrated = false; 
-
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🧠 運動醫學專家知識庫 (全面加裝全球開源動態示範 GIF 網址網網相連)
         const EXERCISE_GUIDE_DB = {
             "深蹲": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/BARBELL-SQUAT.gif",
-                audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，膝蓋與腳尖方向一致，下蹲至大腿與地面平行後大腿發力站起。",
-                faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫臀大肌發力，且重心放在腳掌中央，不要過度前推膝蓋。"
-            },
-            "弓箭步": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Lunge.gif",
-                audio: "一腳向前跨大步，雙腳各踩在一條軌道上。直直下蹲直到前後腳膝蓋都呈 90 度，後腳腳跟離地，用前腳大腿和屁股的力量推回原位。",
-                faq: "<strong>Q: 跨步時膝蓋前方痛、身體搖晃？</strong><br>💡 A: 後腳跨得不夠深會導致前膝壓力過大。請增加前後步距，且核心要像穿了馬甲一樣收緊，維持骨盆中立。"
-            },
-            "橋式": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Glute-Bridge.gif",
-                audio: "平躺於地面，雙膝彎曲，雙腳踩地。由臀部發力將核心與骨盆往上推，直到肩膀、髖關節與膝蓋呈一直線，頂峰收縮 1 秒再緩慢下放。",
-                faq: "<strong>Q: 為什麼做完都是大腿後側或下背在酸，屁股沒感覺？</strong><br>💡 A: 可能是腳掌離屁股太遠（大腿後側代償）或過度挺腰。請將腳跟往屁股收近一步，上去時鎖緊肚子，用夾屁股的力量啟動。"
+                audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。",
+                faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。"
             },
             "伏地挺身": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Push-Up.gif",
-                audio: "雙手略寬於肩撐地，身體從頭到腳呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，用胸肌與三頭肌發力將身體推回。",
-                faq: "<strong>Q: 做完肩膀前側很痛、或是手腕爆痛？</strong><br>💡 A: 這是最經典的代償！你的手肘外展成 90 度（變 T 字形）導致夾擊肩關節。請把手肘往內收，從上方看身體要呈現「箭頭形（⬇️）」，手腕痛的話可嘗試使用伏地挺身架。"
-            },
-            "引體向上": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Pull-up.gif",
-                audio: "雙手略寬於肩正握雙槓，核心收緊、不駝背。想像把胸口往槓子拉近，手肘用力往後口袋塞，感受背闊肌收縮，再緩慢控制下放。",
-                faq: "<strong>Q: 每次拉完都是手臂和脖子酸，背部完全沒感覺？</strong><br>💡 A: 這是因為你過度使用二頭肌與斜方肌「死拉」。啟動前請先做一個「肩胛下沉」的動作，想像手肘是鉤子，用意念用手肘去撞擊地面。"
+                audio: "雙雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
+                faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。"
             },
             "肩推": {
                 gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Dumbbell-Shoulder-Press.gif",
-                audio: "挺胸坐直或站立，核心收緊。雙手持重物於肩膀兩側，手肘微朝前。呼氣時垂直往上推至手臂打直，但不鎖死關節，再沿原路徑緩慢下放。",
-                faq: "<strong>Q: 推完下背（腰部）非常酸痛，肩膀沒感覺？</strong><br>💡 A: 這代表你的重量太重，導致身體用「骨盆前傾、過度挺腰」的姿勢去代償。請立刻減輕重量，並在推起時用力縮肚子、夾緊屁股，鎖死核心。"
-            },
-            "俄羅斯轉體": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Russian-Twist.gif",
-                audio: "坐在地上，膝蓋微彎，雙腳稍微離地（初學者可踩地）。身體微微後仰，核心繃緊，雙手合合，帶動整個胸腔轉向左側、再轉向右側。",
-                faq: "<strong>Q: 轉一轉下背痛到不行？</strong><br>💡 A: 因為你駝背了！脊椎在彎曲的狀態下做旋轉，極度容易造成椎間盤受壓。請務必挺胸，讓脊椎維持一條直線去扭轉胸椎，而非腰椎。"
-            },
-            "捲腹": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Crunch.gif",
-                audio: "平躺後雙膝彎曲，雙手置於耳側或胸前。吐氣時，利用上腹肌的力量將肩胛骨抬離地面，感覺腹肌擠壓，不需要像仰臥起坐那樣整個坐起來。",
-                faq: "<strong>Q: 脖子酸到爆，肚子反而沒感覺？</strong><br>💡 A: 你在用手拼命抱頭往前扯！請把雙手移到胸前交叉，想像下巴夾著一顆橘子，是用「胸口去貼下巴」而不是用頭去撞膝蓋。"
-            },
-            "棒式支撐": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Plank.gif",
-                audio: "手肘撐地於肩膀正下方，雙腳踩地。身體保持從頭到腳呈一直線，肚臍用力往脊椎貼近，屁股夾緊，絕不塌腰或過度翹屁股。",
-                faq: "<strong>Q: 撐不到 30 秒腰就快斷了？</strong><br>💡 A: 腹肌沒力導致骨盆前傾、塌腰，完全用下背的骨頭在硬撐。請立刻把屁股微微抬高，並想像把手肘和腳尖「往中間夾」，強迫腹斜肌與核心咬死。"
-            },
-            "波比跳": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Burpee.gif",
-                audio: "由站姿開始，下蹲後雙手撐地，雙腳向後跳躍成伏地挺身姿勢，接著雙腳向前彈回原位，最後垂直爆發跳起，雙手舉過頭頂。",
-                faq: "<strong>Q: 落地時腳踝和膝蓋衝擊很大、腰會晃動？</strong><br>💡 A: 往後跳時核心若鬆掉，腰椎會往下掉造成甩動受傷。往後跳的瞬間全身要像棒式一樣硬邦邦；落地時請用全腳掌著地並順勢屈膝緩衝。"
-            },
-            "登山者": {
-                gif: "https://fitnessprogramer.com/wp-content/uploads/2021/05/Mountain-Climber.gif",
-                audio: "雙手撐地呈高棒式姿態，身體呈直線。核心繃緊後，雙腿像在跑步一樣，交替將膝蓋快速提向胸前，過程中臀部保持穩定不上下劇烈晃動。",
-                faq: "<strong>Q: 屁股愈踢愈高、肩膀覺得好累？</strong><br>💡 A: 你的身體重心往後移了。請把肩膀移回手掌的正上方，並用腹肌「提膝」而不是用腳盲目往後踹，維持骨盆的高度不變。"
+                audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。",
+                faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。"
             }
         };
 
-        // 🔄 動態更新指導艙內容與動畫示範的引擎
+        // 🔄 徹底對齊防當機版引擎
         function updateExerciseGuide() {
+            if (!exerciseSelector) return;
             const selectedExercise = exerciseSelector.value;
-            const guideData = EXERCISE_GUIDE_DB[selectedExercise];
-            if (guideData) {
-                document.getElementById("guide-audio-text").innerText = guideData.audio;
-                document.getElementById("guide-faq-content").innerHTML = guideData.faq;
-                
-                // 🚀 一秒切換對應動作的 GIF 示範動畫
-                const gifImg = document.getElementById("guide-gif");
+            const guideData = EXERCISE_GUIDE_DB[selectedExercise] || { gif: "", audio: "自訂項目偵測中", faq: "請手動維持標準姿勢" };
+            
+            const audioEl = document.getElementById("guide-audio-text");
+            const faqEl = document.getElementById("guide-faq-content");
+            if(audioEl) audioEl.innerText = guideData.audio;
+            if(faqEl) faqEl.innerHTML = guideData.faq;
+            
+            const gifImg = document.getElementById("guide-gif");
+            if (gifImg) {
+                gifImg.style.display = "none";
+                gifImg.src = ""; 
                 if (guideData.gif) {
-                    gifImg.src = guideData.gif;
-                    gifImg.style.display = "inline-block";
-                } else {
-                    gifImg.style.display = "none";
+                    setTimeout(() => {
+                        gifImg.src = guideData.gif;
+                        gifImg.style.display = "inline-block";
+                    }, 50);
                 }
             }
         }
 
-        // 🚀 網頁載入時自動初始化第一筆動作
-        document.addEventListener("DOMContentLoaded", function() {
-            updateExerciseGuide();
-        });
-    // 🔊 科技感音效產生器
         function playPingSound(isCelebration = false) {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (!isCelebration) {
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.4);
-            } else {
-                [523.25, 659.25, 783.99, 1046.50].forEach((freq, index) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + index * 0.1);
-                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime + index * 0.1);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + index * 0.1 + 0.8);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(audioCtx.currentTime + index * 0.1);
-                    osc.stop(audioCtx.currentTime + index * 0.1 + 0.8);
-                });
-            }
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = isCelebration ? 'triangle' : 'sine';
+                osc.frequency.setValueAtTime(isCelebration ? 880 : 523, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            } catch(e) {}
         }
-
-        function syncWithBrain() {
-            fetch('/api/get_current_counter')
-            .then(res => res.json())
-            .then(data => {
-                countText.innerText = data.counter;
-                if (data.mode === "seconds") {
-                    counterTitle.innerText = "⏱️ 當前累計秒數";
-                } else {
-                    counterTitle.innerText = "🎯 當前累計次數";
-                }
-            });
-        }
-        syncWithBrain();
 
         function smoothLandmarks(currentLandmarks) {
-            if (!landmarkHistory) landmarkHistory = [];
             landmarkHistory.push(currentLandmarks);
-            if (landmarkHistory.length > SMOOTH_FRAMES) { landmarkHistory.shift(); }
+            if (landmarkHistory.length > SMOOTH_FRAMES) landmarkHistory.shift();
             let smoothed = JSON.parse(JSON.stringify(currentLandmarks));
             for (let i = 0; i < smoothed.length; i++) {
                 let sumX = 0, sumY = 0;
                 for (let j = 0; j < landmarkHistory.length; j++) {
-                    sumX += landmarkHistory[j][i].x;
-                    sumY += landmarkHistory[j][i].y;
+                    sumX += landmarkHistory[j][i].x; sumY += landmarkHistory[j][i].y;
                 }
-                smoothed[i].x = sumX / landmarkHistory.length;
-                smoothed[i].y = sumY / landmarkHistory.length;
+                smoothed[i].x = sumX / landmarkHistory.length; smoothed[i].y = sumY / landmarkHistory.length;
             }
             return smoothed;
         }
 
         function speakFeedback(rawText) {
-            if (!voiceToggle.checked || isPaused || isCelebrated) {
-                if (isCelebrated && !window.speechSynthesis.speaking && rawText === "標準") {} 
-                else if (!isCelebrated) { window.speechSynthesis.cancel(); }
-                return;
-            }
-            if (rawText === "標準") {
-                if (window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel(); 
-                    const praise = new SpeechSynthesisUtterance("做得好");
-                    praise.lang = 'zh-TW'; praise.rate = 1.3;
-                    window.speechSynthesis.speak(praise);
-                }
-                return;
-            }
+            if (!voiceToggle.checked || isPaused || isCelebrated) return;
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
                 lastSpeakTime = currentTime;
-                let finalText = rawText;
-                const match = rawText.match(/\d+/);
-                const degrees = match ? match[0] : "";
-                if (rawText.includes("不足") || rawText.includes("不夠")) {
-                    finalText = `再低一點，還差 ${degrees} 度。`;
-                } else if (rawText.includes("過深") || rawText.includes("過低") || rawText.includes("太深") || rawText.includes("太高")) {
-                    finalText = `再高一點。`;
-                }
-                const utterance = new SpeechSynthesisUtterance(finalText);
-                utterance.lang = 'zh-TW'; utterance.rate = 1.2; 
+                const utterance = new SpeechSynthesisUtterance(rawText);
+                utterance.lang = 'zh-TW'; utterance.rate = 1.2;
                 window.speechSynthesis.speak(utterance);
             }
         }
 
-        exerciseSelector.addEventListener('change', () => {
-            fetch('/api/reset_counter', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => { 
-                countText.innerText = data.counter; 
-                isCelebrated = false;
-                updateExerciseGuide(); 
+        if(exerciseSelector) {
+            exerciseSelector.addEventListener('change', () => {
+                fetch('/api/reset_counter', { method: 'POST' })
+                .then(res => res.json())
+                .then(data => { 
+                    countText.innerText = data.counter; 
+                    isCelebrated = false;
+                    updateExerciseGuide(); 
+                });
             });
-        });
+        }
 
         function onResults(results) {
             canvasCtx.save();
@@ -507,113 +360,64 @@
                     canvasCtx.fillStyle = '#00f2fe'; canvasCtx.fill();
                 }
 
-                const selectedExercise = exerciseSelector.value;
-                
-                const sh = stableLandmarks[12] ? [stableLandmarks[12].x, stableLandmarks[12].y] : (stableLandmarks[11] ? [stableLandmarks[11].x, stableLandmarks[11].y] : null);
-                const el = stableLandmarks[14] ? [stableLandmarks[14].x, stableLandmarks[14].y] : (stableLandmarks[13] ? [stableLandmarks[13].x, stableLandmarks[13].y] : null);
-                const wr = stableLandmarks[16] ? [stableLandmarks[16].x, stableLandmarks[16].y] : (stableLandmarks[15] ? [stableLandmarks[15].x, stableLandmarks[15].y] : null);
-                const hp = stableLandmarks[24] ? [stableLandmarks[24].x, stableLandmarks[24].y] : (stableLandmarks[23] ? [stableLandmarks[23].x, stableLandmarks[23].y] : null);
-                const kn = stableLandmarks[26] ? [stableLandmarks[26].x, stableLandmarks[26].y] : (stableLandmarks[25] ? [stableLandmarks[25].x, stableLandmarks[25].y] : null);
-                const ak = stableLandmarks[28] ? [stableLandmarks[28].x, stableLandmarks[28].y] : (stableLandmarks[27] ? [stableLandmarks[27].x, stableLandmarks[27].y] : null);
-
                 const currentTime = Date.now();
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
-                    const payload = {
-                        exercise: selectedExercise,
-                        mode: document.getElementById('mode-selector').value, 
-                        voice_enabled: voiceToggle.checked,
-                        shoulder: sh, elbow: el, wrist: wr, hip: hp, knee: kn, ankle: ak
-                    };
-
                     fetch('/api/analyze', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({
+                            exercise: exerciseSelector.value,
+                            mode: document.getElementById('mode-selector').value,
+                            shoulder: stableLandmarks[12] ? [stableLandmarks[12].x, stableLandmarks[12].y] : null,
+                            elbow: stableLandmarks[14] ? [stableLandmarks[14].x, stableLandmarks[14].y] : null,
+                            wrist: stableLandmarks[16] ? [stableLandmarks[16].x, stableLandmarks[16].y] : null,
+                            hip: stableLandmarks[24] ? [stableLandmarks[24].x, stableLandmarks[24].y] : null,
+                            knee: stableLandmarks[26] ? [stableLandmarks[26].x, stableLandmarks[26].y] : null,
+                            ankle: stableLandmarks[28] ? [stableLandmarks[28].x, stableLandmarks[28].y] : null
+                        })
                     })
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
-                        if (data.error) return;
-
                         angleText.innerText = `${data.current_knee_angle}°`;
                         countText.innerText = data.counter;
 
                         const userTarget = parseInt(targetInput.value) || 10;
-                        const currentMode = document.getElementById('mode-selector').value;
-
-                        if (currentMode === "seconds" || data.exercise_type === "seconds") {
-                            counterTitle.innerText = "⏱️ 當前累計秒數";
-                        } else {
-                            counterTitle.innerText = "🎯 當前累計次數";
-                        }
-
                         if (data.counter >= userTarget && !isCelebrated) {
-                            isCelebrated = true; 
-                            window.speechSynthesis.cancel(); 
-                            playPingSound(true); 
+                            isCelebrated = true;
+                            playPingSound(true);
                             if (voiceToggle.checked) {
-                                const unitStr = currentMode === "seconds" ? "秒" : "下";
-                                const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！成功完成 ${userTarget} ${unitStr} 的 ${data.exercise_name}，任務挑戰成功！`);
-                                celebUtterance.lang = 'zh-TW'; celebUtterance.rate = 1.1;
-                                window.speechSynthesis.speak(celebUtterance);
+                                const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！挑戰成功！`);
+                                celebUtterance.lang = 'zh-TW'; window.speechSynthesis.speak(celebUtterance);
                             }
                         } else if (data.play_ping && data.counter < userTarget) {
-                            playPingSound(false); 
+                            playPingSound(false);
                         }
 
+                        statusText.innerText = data.status;
+                        feedbackText.innerText = data.feedback;
                         if (data.is_valid) {
-                            feedbackText.innerText = "🔥 姿勢非常標準，請繼續保持！";
-                            feedbackText.style.color = "#10b981"; 
-                            statusText.innerText = data.status; statusText.style.color = "#10b981";
-                            videoBox.style.border = "2px solid #10b981";
-                            videoBox.style.boxShadow = "0 0 25px rgba(16, 185, 129, 0.6)";
-                            if (data.feedback === "標準") speakFeedback("標準");
+                            statusText.style.color = "#10b981"; videoBox.style.border = "2px solid #10b981";
                         } else {
-                            feedbackText.innerText = `⚠️ ${data.feedback}`;
-                            feedbackText.style.color = "#ef4444"; 
-                            statusText.innerText = data.status; statusText.style.color = "#ef4444";
-                            videoBox.style.border = "2px solid #ef4444";
-                            videoBox.style.boxShadow = "0 0 25px rgba(239, 68, 68, 0.6)";
-                            if (data.feedback) speakFeedback(data.feedback);
+                            statusText.style.color = "#ef4444"; videoBox.style.border = "2px solid #ef4444";
+                            speakFeedback(data.feedback);
                         }
-                    })
-                    .catch(err => console.error("📡 通訊異常:", err));
+                    });
                 }
-            } else {
-                statusText.innerText = "尋找人體中..."; statusText.style.color = "#6b7280";
-                angleText.innerText = "--°";
-                feedbackText.innerText = "等待分析核心幾何數據..."; feedbackText.style.color = "#00f2fe";
-                videoBox.style.border = "2px solid #00f2fe";
-                videoBox.style.boxShadow = "0 0 20px rgba(0, 242, 254, 0.25)";
             }
             canvasCtx.restore();
         }
 
         pauseButton.addEventListener('click', () => {
             isPaused = !isPaused;
-            if (isPaused) {
-                window.speechSynthesis.cancel(); 
-                pauseButton.innerText = "▶️ 恢復偵測"; 
-                pauseButton.className = "btn-pause paused";
-                statusText.innerText = "偵測已暫停"; statusText.style.color = "#f59e0b";
-                videoBox.style.border = "2px solid #f59e0b";
-                videoBox.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
-            } else {
-                pauseButton.innerText = "⏸️ 暫停偵測"; 
-                pauseButton.className = "btn-pause running";
-                statusText.innerText = "恢復偵測中..."; statusText.style.color = "#10b981";
-            }
+            pauseButton.innerText = isPaused ? "▶️ 恢復偵測" : "⏸️ 暫停偵測";
+            pauseButton.className = isPaused ? "btn-pause paused" : "btn-pause running";
         });
 
         resetButton.addEventListener('click', () => {
-            fetch('/api/reset_counter', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                countText.innerText = "0";
-                isCelebrated = false; 
-                feedbackText.innerText = "數據已成功清空，重新開始計數。";
-                feedbackText.style.color = "#00f2fe";
+            fetch('/api/reset_counter', { method: 'POST' }).then(res => res.json()).then(data => {
+                countText.innerText = "0"; isCelebrated = false;
             });
         });
 
@@ -622,7 +426,9 @@
         pose.onResults(onResults);
 
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
-        camera.start();    
+        camera.start();
+
+        document.addEventListener("DOMContentLoaded", function() { updateExerciseGuide(); });
     </script>
 </body>
 </html>
