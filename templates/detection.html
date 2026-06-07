@@ -2,16 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚡ CyberFit 賽博 AI 運動艙</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             background-color: #0b0f19;
             color: #ffffff;
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -31,22 +35,23 @@
             background: linear-gradient(45deg, #00f2fe, #4facfe);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 28px;
+            font-size: 24px;
         }
         .user-panel {
             background: #111827;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 8px;
             border: 1px solid #3b3b5c;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            font-size: 13px;
         }
         .btn-nav-dashboard {
             background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
             border: none;
             color: #000;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
@@ -56,54 +61,66 @@
         .btn-nav-dashboard:hover {
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
         }
+        
+        /* 🖥️ 電腦端預設：左右雙欄平鋪佈局 */
         .main-layout {
-            display: flex;
-            gap: 25px;
+            display: block; /* 避免 flex 在 Weasyprint/舊版環境縮水，使用彈性 block 搭配內部表格化 */
             width: 100%;
             max-width: 1200px;
-            justify-content: center;
+            margin: 0 auto;
+        }
+        .layout-table {
+            display: table;
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 20px 0;
         }
         .left-box {
-            flex: 1.2;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            display: table-cell;
+            width: 55%;
+            vertical-align: top;
+            text-align: center;
         }
+        .right-box {
+            display: table-cell;
+            width: 45%;
+            vertical-align: top;
+            background: #111827;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #1f2937;
+        }
+
         #video-box {
             position: relative;
-            width: 640px;
-            height: 480px;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 4/3;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
             border: 2px solid #00f2fe;
             box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+            margin: 0 auto;
         }
         video, canvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: 640px;
-            height: 480px;
+            width: 100%;
+            height: 100%;
         }
         video { transform: scaleX(-1); visibility: hidden; }
         canvas { transform: scaleX(-1); }
-        .right-box {
-            flex: 0.8;
-            background: #111827;
-            border-radius: 12px;
-            padding: 20px;
-            border: 1px solid #1f2937;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+
         .control-row {
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
-        select, input[type="number"] {
+        select, input[type="number"], input[type="text"] {
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
@@ -116,27 +133,59 @@
             padding: 15px;
             border-radius: 8px;
             border-left: 4px solid #00f2fe;
+            margin-bottom: 15px;
         }
         .dash-card.error { border-left-color: #ef4444; }
         .dash-card.success { border-left-color: #10b981; }
+        
+        /* 🦾 模組 B：AI 身體檔案區塊特別樣式 */
+        .ai-profile-card {
+            background: linear-gradient(135deg, #1e1b4b 0%, #111827 100%);
+            border: 1px solid #4f46e5;
+            border-left: 4px solid #818cf8;
+        }
+
         .btn-pause {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: none;
             border-radius: 6px;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            font-size: 14px;
         }
         .btn-pause.running { background: #f59e0b; }
         .btn-pause.paused { background: #10b981; }
         .btn-reset {
             background: #374151;
             color: white;
-            padding: 10px 15px;
+            padding: 12px 18px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* 📱 🧠 核心關鍵：殺手級手機端 RWD 響應式佈局覆蓋 */
+        @media screen and (max-width: 768px) {
+            body { padding: 10px; }
+            .header-container { flex-direction: column; gap: 10px; text-align: center; }
+            
+            /* 將電腦端的表格排版打碎，強迫變成上下垂直單欄堆疊 */
+            .layout-table, .left-box, .right-box {
+                display: block;
+                width: 100%;
+            }
+            .layout-table { border-spacing: 0; }
+            .right-box { margin-top: 20px; padding: 15px; }
+
+            /* 針對手機觀看距離：強力放大當前累計次數，讓使用者站 2 公尺遠也看得到 */
+            #workout-count {
+                font-size: 64px !important;
+                text-align: center;
+            }
+            #counter-title { text-align: center; font-size: 16px !important; }
         }
     </style>
 </head>
@@ -146,82 +195,101 @@
         <h1>⚡ CyberFit 賽博 AI 運動艙</h1>
         <div class="user-panel">
             <span>👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
-            <a href="/dashboard" class="btn-nav-dashboard">📊 進入個人數據控制艙</a>
+            <a href="/dashboard" class="btn-nav-dashboard">📊 數據控制艙</a>
         </div>
     </div>
 
     <div class="main-layout">
-        <div class="left-box">
-            <div id="video-box">
-                <video id="webcam" autoplay playsinline></video>
-                <canvas id="output_canvas" width="640" height="480"></canvas>
-            </div>
-        </div>
-
-        <div class="right-box">
-            <div class="control-row">
-                <select id="exercise-selector">
-                    <optgroup label="🦵 下肢與核心訓練">
-                        <option value="深蹲">🏋️ 深蹲 (Squat)</option>
-                        <option value="弓箭步">🦵 弓箭步 (Lunge)</option>
-                        <option value="橋式">🍑 橋式 (Glute Bridge)</option>
-                        <option value="俄羅斯轉體">🔄 俄羅斯轉體 (Twist)</option>
-                        <option value="捲腹">🧘 捲腹 (Crunch)</option>
-                        <option value="棒式支撐">⏱️ 棒式支撐 (Plank)</option>
-                    </optgroup>
-                    <optgroup label="💪 上肢與胸背爆發">
-                        <option value="伏地挺身">🧘 伏地挺身 (Pushup)</option>
-                        <option value="肩推">🏋️ 肩推 (Press)</option>
-                        <option value="引體向上">🦇 引體向上 (Pullup)</option>
-                        <option value="波比跳">🐸 波比跳 (Burpee)</option>
-                        <option value="登山者">🏃 登山者 (Climbers)</option>
-                    </optgroup>
-                </select>
-
-                <select id="mode-selector">
-                    <option value="reps">🎯 計次模式</option>
-                    <option value="seconds">⏱️ 計時模式</option>
-                </select>
+        <div class="layout-table">
+            
+            <div class="left-box">
+                <div id="video-box">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="output_canvas" width="640" height="480"></canvas>
+                </div>
+                
+                <div class="control-row" style="margin-top: 15px; width: 100%; max-width: 640px; margin-left: auto; margin-right: auto;">
+                    <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
+                    <button id="reset-button" class="btn-reset">🔄 重設數據</button>
+                </div>
             </div>
 
-            <div class="control-row">
-                <label style="font-size:14px; color:#9ca3af;">設定目標：</label>
-                <input type="number" id="target-count" value="10" min="1" style="width: 70px;">
-                <label style="font-size:14px; color:#9ca3af; margin-left:15px;">
-                    <input type="checkbox" id="voice-toggle" checked> 🔊 語音修正
-                </label>
-            </div>
+            <div class="right-box">
+                
+                <div class="dash-card ai-profile-card">
+                    <div style="font-size: 14px; color: #a5b4fc; font-weight: bold; margin-bottom: 10px;">🧬 模組 B：AI 身體素質與排課艙</div>
+                    <div class="control-row" style="margin-bottom: 5px;">
+                        <input type="number" id="user-weight" placeholder="體重 (kg)" value="70" style="width: 95px;">
+                        <select id="user-level" style="flex: 1;">
+                            <option value="beginner">🔰 運動新手 (自動過濾高衝擊動作)</option>
+                            <option value="advanced">🔥 健身老手 (全動作解鎖解禁)</option>
+                        </select>
+                    </div>
+                    <div id="ai-schedule-msg" style="font-size: 12px; color: #cbd5e1; margin-top: 8px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; line-height: 1.4;">
+                        💡 AI 智慧配課提示：請輸入身體檔案。
+                    </div>
+                </div>
 
-            <div class="dash-card">
-                <div style="font-size: 14px; color: #9ca3af;" id="counter-title">🎯 當前累計次數</div>
-                <div id="workout-count" style="font-size: 48px; font-weight: bold; color: #00f2fe; margin-top: 5px;">0</div>
-            </div>
+                <div class="control-row">
+                    <select id="exercise-selector" style="flex: 1;">
+                        <optgroup label="🦵 下肢與核心訓練" id="group-lower">
+                            <option value="深蹲">🏋️ 深蹲 (Squat)</option>
+                            <option value="弓箭步">🦵 弓箭步 (Lunge)</option>
+                            <option value="橋式">🍑 橋式 (Glute Bridge)</option>
+                            <option value="俄羅斯轉體">🔄 俄羅斯轉體 (Twist)</option>
+                            <option value="捲腹">🧘 捲腹 (Crunch)</option>
+                            <option value="棒式支撐">⏱️ 棒式支撐 (Plank)</option>
+                        </optgroup>
+                        <optgroup label="💪 上肢與胸背爆發" id="group-upper">
+                            <option value="伏地挺身">🧘 伏地挺身 (Pushup)</option>
+                            <option value="肩推">🏋️ 肩推 (Press)</option>
+                            <option value="引體向上">🦇 引體向上 (Pullup)</option>
+                            <option value="波比跳">🐸 波比跳 (Burpee)</option>
+                            <option value="登山者">🏃 登山者 (Climbers)</option>
+                        </optgroup>
+                    </select>
 
-            <div class="dash-card success">
-                <div style="font-size: 14px; color: #9ca3af;">🤖 AI 即時狀態判定</div>
-                <div id="pose-status" style="font-size: 20px; font-weight: bold; margin-top: 5px; color: #10b981;">尋找人體中...</div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">核心關節夾角: <span id="knee-angle">--°</span></div>
-            </div>
+                    <select id="mode-selector" style="width: 110px;">
+                        <option value="reps">🎯 計次</option>
+                        <option value="seconds">⏱️ 計時</option>
+                    </select>
+                </div>
 
-            <div class="dash-card" id="feedback-card">
-                <div style="font-size: 14px; color: #9ca3af;">💡 動作教練即時反饋</div>
-                <div id="ai-feedback" style="font-size: 16px; margin-top: 5px; color: #4facfe;">等待分析幾何數據...</div>
-            </div>
+                <div class="control-row">
+                    <label style="font-size:13px; color:#9ca3af;">目標設定：</label>
+                    <input type="number" id="target-count" value="10" min="1" style="width: 65px;">
+                    <label style="font-size:13px; color:#9ca3af; margin-left:10px; user-select: none; cursor:pointer;">
+                        <input type="checkbox" id="voice-toggle" checked> 🔊 語音修正
+                    </label>
+                </div>
 
-            <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c; min-height: 180px; display: flex; align-items: center; justify-content: center;">
-                <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
-            </div>
+                <div class="dash-card">
+                    <div style="font-size: 14px; color: #9ca3af;" id="counter-title">🎯 當前累計次數</div>
+                    <div id="workout-count" style="font-size: 48px; font-weight: bold; color: #00f2fe; margin-top: 5px;">0</div>
+                </div>
 
-            <div style="background: #1f2937; padding: 12px; border-radius: 8px; font-size: 13px;">
-                <h4 style="color: #ffaa00; margin: 0 0 6px 0;">💡 30秒動作口述要領：</h4>
-                <p id="guide-audio-text" style="color: #e0e0e0; margin: 0 0 10px 0; line-height: 1.4;">載入中...</p>
-                <h4 style="color: #ef4444; margin: 0 0 4px 0;">🚨 常見代償與醫學解法：</h4>
-                <p id="guide-faq-content" style="color: #cbd5e1; margin: 0; line-height: 1.4;">載入中...</p>
-            </div>
+                <div class="dash-card success">
+                    <div style="font-size: 14px; color: #9ca3af;">🤖 AI 即時狀態判定</div>
+                    <div id="pose-status" style="font-size: 18px; font-weight: bold; margin-top: 5px; color: #10b981;">尋找人體中...</div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">核心關節夾角: <span id="knee-angle">--°</span></div>
+                </div>
 
-            <div class="control-row">
-                <button id="pause-button" class="btn-pause running">⏸️ 暫停偵測</button>
-                <button id="reset-button" class="btn-reset">🔄 重設數據</button>
+                <div class="dash-card" id="feedback-card">
+                    <div style="font-size: 14px; color: #9ca3af;">💡 動作教練即時反饋</div>
+                    <div id="ai-feedback" style="font-size: 15px; margin-top: 5px; color: #4facfe;">等待分析幾何數據...</div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c; min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                    <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
+                </div>
+
+                <div style="background: #1f2937; padding: 12px; border-radius: 8px; font-size: 13px;">
+                    <h4 style="color: #ffaa00; margin: 0 0 6px 0;">💡 30秒動作口述要領：</h4>
+                    <p id="guide-audio-text" style="color: #e0e0e0; margin: 0 0 10px 0; line-height: 1.4;">載入中...</p>
+                    <h4 style="color: #ef4444; margin: 0 0 4px 0;">🚨 常見代償與醫學解法：</h4>
+                    <p id="guide-faq-content" style="color: #cbd5e1; margin: 0; line-height: 1.4;">載入中...</p>
+                </div>
+
             </div>
         </div>
     </div>
@@ -234,13 +302,17 @@
         const statusText = document.getElementById('pose-status');
         const angleText = document.getElementById('knee-angle');
         const countText = document.getElementById('workout-count'); 
-        const counterTitle = document.getElementById('counter-title'); 
         const feedbackText = document.getElementById('ai-feedback');
         const exerciseSelector = document.getElementById('exercise-selector');
         const voiceToggle = document.getElementById('voice-toggle');
         const pauseButton = document.getElementById('pause-button');
         const resetButton = document.getElementById('reset-button'); 
         const targetInput = document.getElementById('target-count');  
+
+        // 🦾 模組 B 控制節點
+        const userWeightInput = document.getElementById('user-weight');
+        const userLevelSelector = document.getElementById('user-level');
+        const aiScheduleMsg = document.getElementById('ai-schedule-msg');
 
         let isPaused = false; 
         let lastAnalysisTime = 0;
@@ -251,86 +323,80 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 🎯 11大動作完全本地化路由，與硬碟中的圖檔名稱完美精準對齊
         const EXERCISE_GUIDE_DB = {
-            "深蹲": {
-                gif: "/static/images/squat.gif",
-                audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。",
-                faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。"
-            },
-            "弓箭步": {
-                gif: "/static/images/lunge.gif",
-                audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。",
-                faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。"
-            },
-            "橋式": {
-                gif: "/static/images/glute_bridge.gif",
-                audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。",
-                faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。"
-            },
-            "俄羅斯轉體": {
-                gif: "/static/images/russian_twist.gif",
-                audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。",
-                faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。"
-            },
-            "捲腹": {
-                gif: "/static/images/crunch.gif",
-                audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。",
-                faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。"
-            },
-            "棒式支撐": {
-                gif: "/static/images/plank.gif",
-                audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。",
-                faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。"
-            },
-            "伏地挺身": {
-                gif: "/static/images/pushup.gif",
-                audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。",
-                faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。"
-            },
-            "肩推": {
-                gif: "/static/images/shoulder_press.gif",
-                audio: "挺胸坐直，核心收緊。雙手持重物於肩膀裝卸兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。",
-                faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。"
-            },
-            "引體向上": {
-                gif: "/static/images/pullup.gif",
-                audio: "雙手略寬於肩正握單槓，背括肌發力將身體往上拉，直到下巴超過單槓，隨後緩慢控制下放速度。",
-                faq: "<strong>Q: 拉上去時脖子僵硬、手臂爆酸？</strong><br>💡 A: 這是聳肩且過度用二頭肌死拉。請想像把「手肘往褲子後口袋塞」，強迫背部發力。"
-            },
-            "波比跳": {
-                gif: "/static/images/burpee.gif",
-                audio: "下蹲雙手撐地，雙腳向後跳躍呈伏地挺身姿，完成一下伏地挺身後往前跳回下蹲姿，隨後垂直爆發向上跳躍。",
-                faq: "<strong>Q: 跳到後面喘不過氣、動作散掉、腰很酸？</strong><br>💡 A: 核心潰散。雙腳往後跳時肚子一定要用力收緊，避免骨盆像自由落體一樣砸向地面摔傷腰椎。"
-            },
-            "登山者": {
-                gif: "/static/images/mountain_climber.gif",
-                audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。",
-                faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。"
-            }
+            "深蹲": { gif: "/static/images/squat.gif", audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。", faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。" },
+            "弓箭步": { gif: "/static/images/lunge.gif", audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。", faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。" },
+            "橋式": { gif: "/static/images/glute_bridge.gif", audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。", faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。" },
+            "俄羅斯轉體": { gif: "/static/images/russian_twist.gif", audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。", faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。" },
+            "捲腹": { gif: "/static/images/crunch.gif", audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。", faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。" },
+            "棒式支撐": { gif: "/static/images/plank.gif", audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。", faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。" },
+            "伏地挺身": { gif: "/static/images/pushup.gif", audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。", faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。" },
+            "肩推": { gif: "/static/images/shoulder_press.gif", audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。", faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。" },
+            "引體向上": { gif: "/static/images/pullup.gif", audio: "雙手略寬於肩正握單槓，背括肌發力將身體往上拉，直到下巴超過單槓，隨後緩慢控制下放速度。", faq: "<strong>Q: 拉上去時脖子僵硬、手臂爆酸？</strong><br>💡 A: 這是聳肩且過度用二頭肌死拉。請想像把「手肘往褲子後口袋塞」，強迫背部發力。" },
+            "波比跳": { gif: "/static/images/burpee.gif", audio: "下蹲雙手撐地，雙腳向後跳躍呈伏地挺身姿，完成一下伏地挺身後往前跳回下蹲姿，隨後垂直爆發向上跳躍。", faq: "<strong>Q: 跳到後面喘不過氣、動作散掉、腰很酸？</strong><br>💡 A: 核心潰散。雙腳往後跳時肚子一定要用力收緊，避免骨盆像自由落體一樣砸向地面摔傷腰椎。" },
+            "登山者": { gif: "/static/images/mountain_climber.gif", audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。", faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。" }
         };
 
+        // 🧠 🦾 模組 B 核心邏輯：根據體重與新手級別，動態過濾危險/高衝擊動作，並給出醫學排程提示
+        function applyAIScheduler() {
+            const weight = parseFloat(userWeightInput.value) || 70;
+            const level = userLevelSelector.value;
+            const currentSelected = exerciseSelector.value;
+            
+            // 預設全部動作選項顯示
+            const allOptions = exerciseSelector.querySelectorAll('option');
+            allOptions.forEach(opt => opt.disabled = false);
+
+            let message = "";
+
+            if (level === "beginner") {
+                if (weight >= 85) {
+                    // 💥 超級新手 + 體重較重：全面封鎖高衝擊的波比跳、登山者、弓箭步，防止關節代償摧毀膝蓋
+                    const disableList = ["波比跳", "登山者", "弓箭步"];
+                    disableList.forEach(name => {
+                        const opt = exerciseSelector.querySelector(`option[value="${name}"]`);
+                        if(opt) opt.disabled = true;
+                    });
+                    message = `🚨 <strong>AI 醫學排程警告</strong>：檢測到學員體重 (${weight}kg) 較重且為新手，系統已<strong>主動封鎖波比跳、登山者、弓箭步</strong>，以防高衝擊重力摧毀膝關節。推薦優先執行「橋式」與「棒式」強化核心穩定肌群。`;
+                    
+                    if (disableList.includes(currentSelected)) {
+                        exerciseSelector.value = "橋式";
+                        updateExerciseGuide();
+                    }
+                } else {
+                    // 一般新手：封鎖最高難度的波比跳與引體向上
+                    const disableList = ["波比跳", "引體向上"];
+                    disableList.forEach(name => {
+                        const opt = exerciseSelector.querySelector(`option[value="${name}"]`);
+                        if(opt) opt.disabled = true;
+                    });
+                    message = `🔰 <strong>AI 智慧排程提示</strong>：新學員入門。系統已<strong>自動隱藏高難度動作（波比跳、引體向上）</strong>。推薦從「深蹲」及「伏地挺身」基礎多關節動作開始建立神經連結。`;
+                    
+                    if (disableList.includes(currentSelected)) {
+                        exerciseSelector.value = "深蹲";
+                        updateExerciseGuide();
+                    }
+                }
+            } else {
+                // 老手：全動作解禁
+                message = `🔥 <strong>AI 戰力評估</strong>：高階老手艙解鎖！11 大動作核心禁區全面開放。請維持高核心張力，挑戰個人最大訓練量。`;
+            }
+
+            aiScheduleMsg.innerHTML = message;
+        }
+
         function updateExerciseGuide() {
-            const selector = document.getElementById('exercise-selector');
-            if (!selector) return;
+            const selectedExercise = exerciseSelector.value;
+            const guideData = EXERCISE_GUIDE_DB[selectedExercise] || { gif: "", audio: "數據收集中心", faq: "請手動維持標準姿勢" };
             
-            const selectedExercise = selector.value;
-            const guideData = EXERCISE_GUIDE_DB[selectedExercise] || { gif: "", audio: "自訂項目幾何數據收集中心", faq: "請手動維持標準姿勢" };
-            
-            const audioEl = document.getElementById("guide-audio-text");
-            const faqEl = document.getElementById("guide-faq-content");
-            if(audioEl) audioEl.innerText = guideData.audio;
-            if(faqEl) faqEl.innerHTML = guideData.faq;
+            document.getElementById("guide-audio-text").innerText = guideData.audio;
+            document.getElementById("guide-faq-content").innerHTML = guideData.faq;
             
             const gifImg = document.getElementById("guide-gif");
             if (gifImg) {
-                gifImg.style.display = "none";
-                gifImg.src = ""; 
+                gifImg.style.display = "none"; gifImg.src = ""; 
                 if (guideData.gif) {
-                    setTimeout(() => {
-                        gifImg.src = guideData.gif;
-                        gifImg.style.display = "inline-block";
-                    }, 50);
+                    setTimeout(() => { gifImg.src = guideData.gif; gifImg.style.display = "inline-block"; }, 50);
                 }
             }
         }
@@ -338,8 +404,7 @@
         function playPingSound(isCelebration = false) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
                 osc.type = isCelebration ? 'triangle' : 'sine';
                 osc.frequency.setValueAtTime(isCelebration ? 880 : 523, audioCtx.currentTime);
                 gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
@@ -374,17 +439,15 @@
             }
         }
 
-        if(exerciseSelector) {
-            exerciseSelector.addEventListener('change', () => {
-                fetch('/api/reset_counter', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => { 
-                    countText.innerText = data.counter; 
-                    isCelebrated = false;
-                    updateExerciseGuide(); 
-                });
+        exerciseSelector.addEventListener('change', () => {
+            fetch('/api/reset_counter', { method: 'POST' }).then(res => res.json()).then(data => { 
+                countText.innerText = data.counter; isCelebrated = false; updateExerciseGuide(); 
             });
-        }
+        });
+
+        // 🦾 監聽模組 B 的變更事件
+        userWeightInput.addEventListener('input', applyAIScheduler);
+        userLevelSelector.addEventListener('change', applyAIScheduler);
 
         function onResults(results) {
             canvasCtx.save();
@@ -396,8 +459,7 @@
             if (results.poseLandmarks) {
                 const stableLandmarks = smoothLandmarks(results.poseLandmarks);
                 for (const landmark of stableLandmarks) {
-                    const x = landmark.x * canvasElement.width;
-                    const y = landmark.y * canvasElement.height;
+                    const x = landmark.x * canvasElement.width; const y = landmark.y * canvasElement.height;
                     canvasCtx.beginPath(); canvasCtx.arc(x, y, 4, 0, 2 * Math.PI);
                     canvasCtx.fillStyle = '#00f2fe'; canvasCtx.fill();
                 }
@@ -427,8 +489,7 @@
 
                         const userTarget = parseInt(targetInput.value) || 10;
                         if (data.counter >= userTarget && !isCelebrated) {
-                            isCelebrated = true;
-                            playPingSound(true);
+                            isCelebrated = true; playPingSound(true);
                             if (voiceToggle.checked) {
                                 const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！挑戰成功！`);
                                 celebUtterance.lang = 'zh-TW'; window.speechSynthesis.speak(celebUtterance);
@@ -437,8 +498,7 @@
                             playPingSound(false);
                         }
 
-                        statusText.innerText = data.status;
-                        feedbackText.innerText = data.feedback;
+                        statusText.innerText = data.status; feedbackText.innerText = data.feedback;
                         if (data.is_valid) {
                             statusText.style.color = "#10b981"; videoBox.style.border = "2px solid #10b981";
                         } else {
@@ -470,7 +530,10 @@
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
         camera.start();
 
-        document.addEventListener("DOMContentLoaded", function() { updateExerciseGuide(); });
+        document.addEventListener("DOMContentLoaded", function() { 
+            updateExerciseGuide(); 
+            applyAIScheduler(); // 初始化 AI 排程面板
+        });
     </script>
 </body>
 </html>
