@@ -62,9 +62,9 @@
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
         }
         
-        /* 🖥️ 電腦端預設：左右雙欄平鋪佈局 */
+        /* 🖥️ 電腦端預設布局 */
         .main-layout {
-            display: block; /* 避免 flex 在 Weasyprint/舊版環境縮水，使用彈性 block 搭配內部表格化 */
+            display: block;
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
@@ -137,42 +137,11 @@
         }
         .dash-card.error { border-left-color: #ef4444; }
         .dash-card.success { border-left-color: #10b981; }
-        
-        /* 🦾 模組 B：AI 身體檔案區塊特別樣式 */
-        .ai-profile-card {
-            background: linear-gradient(135deg, #1e1b4b 0%, #111827 100%);
-            border: 1px solid #4f46e5;
-            border-left: 4px solid #818cf8;
-        }
 
-        .btn-pause {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .btn-pause.running { background: #f59e0b; }
-        .btn-pause.paused { background: #10b981; }
-        .btn-reset {
-            background: #374151;
-            color: white;
-            padding: 12px 18px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* 📱 🧠 核心關鍵：殺手級手機端 RWD 響應式佈局覆蓋 */
+        /* 📱 核心關鍵：手機端 RWD 響應式佈局 */
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
             .header-container { flex-direction: column; gap: 10px; text-align: center; }
-            
-            /* 將電腦端的表格排版打碎，強迫變成上下垂直單欄堆疊 */
             .layout-table, .left-box, .right-box {
                 display: block;
                 width: 100%;
@@ -180,7 +149,6 @@
             .layout-table { border-spacing: 0; }
             .right-box { margin-top: 20px; padding: 15px; }
 
-            /* 針對手機觀看距離：強力放大當前累計次數，讓使用者站 2 公尺遠也看得到 */
             #workout-count {
                 font-size: 64px !important;
                 text-align: center;
@@ -194,8 +162,8 @@
     <div class="header-container">
         <h1>⚡ CyberFit 賽博 AI 運動艙</h1>
         <div class="user-panel">
-            <span>👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
-            <a href="/dashboard" class="btn-nav-dashboard">📊 數據控制艙</a>
+            <span id="member-status-text">👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
+            <a href="/profile" class="btn-nav-dashboard">🧬 進入身體檔案艙</a>
         </div>
     </div>
 
@@ -216,35 +184,13 @@
 
             <div class="right-box">
                 
-                <div class="control-panel" style="margin-top: 15px; border: 1px solid #4f46e5; background: rgba(17, 24, 39, 0.8); padding: 15px; border-radius: 12px;">
+                <div class="control-panel" style="border: 1px solid #4f46e5; background: rgba(17, 24, 39, 0.8); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <span style="color: #a5b4fc; font-weight: bold; font-size: 14px;">🎯 AI 會員智慧課表狀態</span>
-                        <a href="/profile" style="color: #818cf8; font-size: 12px; text-decoration: none; border: 1px solid #818cf8; padding: 4px 8px; border-radius: 6px;">🧬 設定身體檔案</a>
+                        <span id="membership-badge" style="font-size: 11px; background: #374151; padding: 2px 6px; border-radius: 4px; color: #9ca3af;">未解鎖</span>
                     </div>
-
-                    {% if session.get('user_profile_status') == 'has_profile' %}
-                        <div style="color: #10b981; font-size: 13px; font-weight: bold; margin-bottom: 8px;">🔥 今日 AI 醫學客製課表已就位：</div>
-                        
-                        {% for note in session.get('ai_medical_notes', []) %}
-                            <div style="font-size: 11px; color: #cbd5e1; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid #fbbf24;">
-                                {{ note }}
-                            </div>
-                        {% endfor %}
-
-                        <div id="ai-routine-list" style="margin-top: 10px;">
-                            {% for item in session.get('ai_schedule', []) %}
-                                <div class="routine-item" data-action="{{ item.action }}" data-target="{{ item.target }}" data-type="{{ item.type }}" style="display: flex; justify-content: space-between; background: #1f2937; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 13px;">
-                                    <span style="font-weight: bold; color: white;">📌 {{ item.action }}</span>
-                                    <span style="color: #34d399;">{{ item.sets }} 組 × {{ item.target }}{% if item.type == 'reps' %}下{% else %}秒{% endif %}</span>
-                                </div>
-                            {% endfor %}
+                    <div id="ai-schedule-content">
                         </div>
-                    {% else %}
-                        <div style="text-align: center; padding: 10px 0;">
-                            <p style="font-size: 12px; color: #9ca3af; margin: 0 0 10px 0;">目前為【訪客體驗模式】，僅開放手動單次練習。</p>
-                            <a href="/profile" style="display: inline-block; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(124,58,237,0.3);">🚀 升級解鎖 AI 智慧排課艙</a>
-                        </div>
-                    {% endif %}
                 </div>
 
                 <div class="control-row">
@@ -293,7 +239,7 @@
 
                 <div class="dash-card" id="feedback-card">
                     <div style="font-size: 14px; color: #9ca3af;">💡 動作教練即時反饋</div>
-                    <div id="ai-feedback" style="font-size: 15px; margin-top: 5px; color: #4facfe;">等待分析幾何數據...</div>
+                    <div id="ai-feedback" style="font-size: 15px; margin-top: 5px; color: #4facfe;">等待 analysis 幾何數據...</div>
                 </div>
 
                 <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c; min-height: 180px; display: flex; align-items: center; justify-content: center;">
@@ -326,11 +272,6 @@
         const resetButton = document.getElementById('reset-button'); 
         const targetInput = document.getElementById('target-count');  
 
-        // 🦾 模組 B 控制節點
-        const userWeightInput = document.getElementById('user-weight');
-        const userLevelSelector = document.getElementById('user-level');
-        const aiScheduleMsg = document.getElementById('ai-schedule-msg');
-
         let isPaused = false; 
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
@@ -353,54 +294,6 @@
             "波比跳": { gif: "/static/images/burpee.gif", audio: "下蹲雙手撐地，雙腳向後跳躍呈伏地挺身姿，完成一下伏地挺身後往前跳回下蹲姿，隨後垂直爆發向上跳躍。", faq: "<strong>Q: 跳到後面喘不過氣、動作散掉、腰很酸？</strong><br>💡 A: 核心潰散。雙腳往後跳時肚子一定要用力收緊，避免骨盆像自由落體一樣砸向地面摔傷腰椎。" },
             "登山者": { gif: "/static/images/mountain_climber.gif", audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。", faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。" }
         };
-
-        // 🧠 🦾 模組 B 核心邏輯：根據體重與新手級別，動態過濾危險/高衝擊動作，並給出醫學排程提示
-        function applyAIScheduler() {
-            const weight = parseFloat(userWeightInput.value) || 70;
-            const level = userLevelSelector.value;
-            const currentSelected = exerciseSelector.value;
-            
-            // 預設全部動作選項顯示
-            const allOptions = exerciseSelector.querySelectorAll('option');
-            allOptions.forEach(opt => opt.disabled = false);
-
-            let message = "";
-
-            if (level === "beginner") {
-                if (weight >= 85) {
-                    // 💥 超級新手 + 體重較重：全面封鎖高衝擊的波比跳、登山者、弓箭步，防止關節代償摧毀膝蓋
-                    const disableList = ["波比跳", "登山者", "弓箭步"];
-                    disableList.forEach(name => {
-                        const opt = exerciseSelector.querySelector(`option[value="${name}"]`);
-                        if(opt) opt.disabled = true;
-                    });
-                    message = `🚨 <strong>AI 醫學排程警告</strong>：檢測到學員體重 (${weight}kg) 較重且為新手，系統已<strong>主動封鎖波比跳、登山者、弓箭步</strong>，以防高衝擊重力摧毀膝關節。推薦優先執行「橋式」與「棒式」強化核心穩定肌群。`;
-                    
-                    if (disableList.includes(currentSelected)) {
-                        exerciseSelector.value = "橋式";
-                        updateExerciseGuide();
-                    }
-                } else {
-                    // 一般新手：封鎖最高難度的波比跳與引體向上
-                    const disableList = ["波比跳", "引體向上"];
-                    disableList.forEach(name => {
-                        const opt = exerciseSelector.querySelector(`option[value="${name}"]`);
-                        if(opt) opt.disabled = true;
-                    });
-                    message = `🔰 <strong>AI 智慧排程提示</strong>：新學員入門。系統已<strong>自動隱藏高難度動作（波比跳、引體向上）</strong>。推薦從「深蹲」及「伏地挺身」基礎多關節動作開始建立神經連結。`;
-                    
-                    if (disableList.includes(currentSelected)) {
-                        exerciseSelector.value = "深蹲";
-                        updateExerciseGuide();
-                    }
-                }
-            } else {
-                // 老手：全動作解禁
-                message = `🔥 <strong>AI 戰力評估</strong>：高階老手艙解鎖！11 大動作核心禁區全面開放。請維持高核心張力，挑戰個人最大訓練量。`;
-            }
-
-            aiScheduleMsg.innerHTML = message;
-        }
 
         function updateExerciseGuide() {
             const selectedExercise = exerciseSelector.value;
@@ -461,10 +354,6 @@
                 countText.innerText = data.counter; isCelebrated = false; updateExerciseGuide(); 
             });
         });
-
-        // 🦾 監聽模組 B 的變更事件
-        userWeightInput.addEventListener('input', applyAIScheduler);
-        userLevelSelector.addEventListener('change', applyAIScheduler);
 
         function onResults(results) {
             canvasCtx.save();
@@ -547,19 +436,63 @@
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
         camera.start();
 
-        // 🔄 AI 課表自動引導動態追蹤機制
+        // 🔄 跨網頁身分自動判定與動態課表渲染引擎
         document.addEventListener("DOMContentLoaded", function() {
-            const aiItems = document.querySelectorAll('#ai-routine-list .routine-item');
-            if (aiItems.length > 0) {
-                // 自動將主畫面的偵測選單，切換為 AI 課表推薦的第一個動作
-                const firstAction = aiItems[0].getAttribute('data-action');
-                const selectMenu = document.getElementById('pose-select'); // 你的下拉選單 id
-                if (selectMenu) {
-                    selectMenu.value = firstAction;
-                    // 觸發你原本寫好的切換動作 function (例如 changePose() 或 updateTarget())
-                    if (typeof changePose === "function") { changePose(firstAction); }
+            updateExerciseGuide(); 
+
+            // 向後端詢問目前的 Session 狀態，判定是訪客還是正式會員
+            fetch('/api/get_session_status')
+            .then(res => res.json())
+            .then(sessionData => {
+                const statusText = document.getElementById('member-status-text');
+                const badge = document.getElementById('membership-badge');
+                const contentBox = document.getElementById('ai-schedule-content');
+
+                if (sessionData.user_profile_status === 'has_profile') {
+                    // 👑 判定為會員：變更頂部導覽列狀態
+                    if(statusText) statusText.innerHTML = `👋 已連線，<strong style="color: #10b981;">正式會員學員</strong>`;
+                    if(badge) { badge.innerText = "已連線"; badge.style.background = "#10b981"; badge.style.color = "#fff"; }
+
+                    // 投射專屬醫學課表與備註
+                    let notesHtml = '';
+                    sessionData.ai_medical_notes.forEach(note => {
+                        notesHtml += `<div style="font-size: 11px; color: #cbd5e1; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid #fbbf24;">${note}</div>`;
+                    });
+
+                    let listHtml = '';
+                    sessionData.ai_schedule.forEach(item => {
+                        listHtml += `
+                            <div class="routine-item" data-action="${item.action}" style="display: flex; justify-content: space-between; background: #1f2937; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 13px;">
+                                <span style="font-weight: bold; color: white;">📌 ${item.action}</span>
+                                <span style="color: #34d399;">${item.sets} 組 × ${item.target}${item.type === 'reps' ? '下' : '秒'}</span>
+                            </div>`;
+                    });
+
+                    contentBox.innerHTML = `
+                        <div style="color: #10b981; font-size: 13px; font-weight: bold; margin-bottom: 8px;">🔥 今日 AI 醫學客製課表已就位：</div>
+                        ${notesHtml}
+                        <div style="margin-top: 10px;">${listHtml}</div>
+                    `;
+
+                    // 🔄 自動把下拉選單切換成課表第一個動作 (精準對齊真實元素 ID)
+                    if (sessionData.ai_schedule.length > 0) {
+                        const firstAction = sessionData.ai_schedule[0].action;
+                        if (exerciseSelector) {
+                            exerciseSelector.value = firstAction;
+                            updateExerciseGuide();
+                        }
+                    }
+
+                } else {
+                    // 👤 判定為訪客：渲染商業升級按鈕
+                    contentBox.innerHTML = `
+                        <div style="text-align: center; padding: 10px 0;">
+                            <p style="font-size: 12px; color: #9ca3af; margin: 0 0 10px 0;">目前為【訪客體驗模式】，僅開放手動單次練習。</p>
+                            <a href="/profile" style="display: inline-block; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(124,58,237,0.3);">🚀 升級解鎖 AI 智慧排課艙</a>
+                        </div>
+                    `;
                 }
-            }
+            });
         });
     </script>
 </body>
