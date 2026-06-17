@@ -4,12 +4,20 @@ import math
 app = Flask(__name__)
 app.secret_key = "cyberfit_fujen_secret_key"
 
-# 🛠️ 全域運動計數與狀態資料庫
+# 🛠️ 全域運動計數與狀態資料庫（新增：模組 A 歷史數據統計池）
 COUNTER_DB = {
     "counter": 0,
     "status": "就位準備",
     "stage": "up",
-    "mode": "reps"
+    "mode": "reps",
+    # 📊 專屬大腦記憶庫：儲存學員在本次 Session 中各動作的「真實累計總次數」
+    "history": {
+        "深蹲": 0,
+        "伏地挺身": 0,
+        "捲腹": 0,
+        "橋式": 0,
+        "棒式支撐": 0
+    }
 }
 
 def calculate_angle(p1, p2, p3):
@@ -45,10 +53,22 @@ def profile_page():
 
 @app.route('/api/reset_counter', methods=['POST'])
 def reset_counter():
+    data = request.get_json() or {}
+    current_exercise = data.get('exercise', '深蹲')
+    
+    # 📦 結算心法：在清除當前畫面的 0 之前，把剛剛做完的次數「累加」進去歷史池
+    if current_exercise in COUNTER_DB["history"]:
+        COUNTER_DB["history"][current_exercise] += COUNTER_DB["counter"]
+        
     COUNTER_DB["counter"] = 0
     COUNTER_DB["stage"] = "center" if "stage" in COUNTER_DB else "up"
-    COUNTER_DB["status"] = "數據已重置"
-    return jsonify({"counter": 0, "status": "數據已重置"})
+    COUNTER_DB["status"] = "今日數據已結算存入控制艙"
+    
+    return jsonify({
+        "counter": 0, 
+        "status": "數據已重置",
+        "history": COUNTER_DB["history"]
+    })
 
 @app.route('/api/get_session_status')
 def get_session_status():
@@ -56,6 +76,20 @@ def get_session_status():
         "user_profile_status": session.get('user_profile_status', 'guest'),
         "ai_schedule": session.get('ai_schedule', []),
         "ai_medical_notes": session.get('ai_medical_notes', [])
+    })
+
+# =========================================================================
+# 📊 模組 A：提供 Chart.js 讀取真實運動歷史數據的全新數據通道
+# =========================================================================
+@app.route('/api/get_workout_stats')
+def get_workout_stats():
+    # 將後端統計好的真實次數，分包打包傳給前端前端控制艙
+    labels = list(COUNTER_DB["history"].keys())
+    data = list(COUNTER_DB["history"].values())
+    return jsonify({
+        "labels": labels,
+        "data": data,
+        "total_today": sum(data)
     })
 
 # =========================================================================
@@ -139,7 +173,6 @@ def analyze():
         else:
             feedback = "⚠️ 請側面對鏡頭，以便AI計算身體直線度"
 
-    # (其餘動作判定維持不變，僅做格式精確縮排)
     else:
         feedback = "有氧燃脂爆發中！維持頻率"
 
