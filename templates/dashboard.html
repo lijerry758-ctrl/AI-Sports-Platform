@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 CyberFit 數據控制艙</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+        .header-nav {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #1f2937;
+            padding-bottom: 15px;
+        }
+        h2 {
+            margin: 0;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 24px;
+        }
+        .btn-back {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .btn-back:hover { background: #374151; }
+
+        /* 🖥️ 圖表雙欄網格布局，手機自動切換為單欄垂直排列 */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media screen and (max-width: 500px) {
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        .chart-title {
+            font-size: 15px;
+            color: #a5b4fc;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-nav">
+            <h2>📊 CyberFit 數據統計控制艙</h2>
+            <a href="/" class="btn-back">⬅️ 返回 AI 鏡頭運動艙</a>
+        </div>
+
+        <div class="chart-grid">
+            
+            <div class="chart-card">
+                <div class="chart-title">📈 近一週每日累計總訓練次數 (Reps)</div>
+                <div style="position: relative; width: 100%; height: 280px;">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-title">🍕 本週各運動動作核心佔比 (Distribution)</div>
+                <div style="position: relative; width: 100%; height: 280px; display: flex; justify-content: center;">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 🤖 渲染圖表一：近一週訓練量（折線圖）
+            const ctxTrend = document.getElementById('trendChart').getContext('2d');
+            new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: ['6/11', '6/12', '6/13', '6/14', '6/15', '6/16', '今日'],
+                    datasets: [{
+                        label: '累計次數',
+                        data: [45, 60, 25, 0, 80, 95, 120], // 模擬連續實測數據
+                        borderColor: '#00f2fe',
+                        backgroundGradient: 'rgba(0, 242, 254, 0.2)',
+                        backgroundColor: 'rgba(0, 242, 254, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.3, // 讓折線變滑順的商業心法
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+
+            // 🤖 渲染圖表二：動作佔比（圓餅圖）
+            const ctxDist = document.getElementById('distributionChart').getContext('2d');
+            new Chart(ctxDist, {
+                type: 'doughnut', // 環形甜甜圈圖，比純圓餅圖高階
+                data: {
+                    labels: ['🏋️ 深蹲', '🧘 伏地挺身', '🧘 捲腹', '🍑 橋式', '⏱️ 棒式'],
+                    datasets: [{
+                        data: [40, 25, 15, 12, 8], // 動作次數配比
+                        backgroundColor: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 12 } } }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
