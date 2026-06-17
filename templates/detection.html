@@ -424,8 +424,17 @@
         });
 
         resetButton.addEventListener('click', () => {
-            fetch('/api/reset_counter', { method: 'POST' }).then(res => res.json()).then(data => {
-                countText.innerText = "0"; isCelebrated = false;
+            // 🚀 必須明確攜帶當前動作名稱與 JSON 宣告，否則後端會噴 415 拒絕接收！
+            fetch('/api/reset_counter', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ exercise: exerciseSelector.value })
+            })
+            .then(res => res.json())
+            .then(data => {
+                countText.innerText = "0"; 
+                isCelebrated = false;
+                statusText.innerText = data.status; // 提示已存入控制艙
             });
         });
 

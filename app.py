@@ -66,7 +66,7 @@ def reset_counter():
     
     return jsonify({
         "counter": 0, 
-        "status": "數據已重置",
+        "status": "數據已重置及結算存入控制艙",
         "history": COUNTER_DB["history"]
     })
 
@@ -93,7 +93,7 @@ def get_workout_stats():
     })
 
 # =========================================================================
-# ⚙️ 方案 A 鎖定機制：動作分析引擎
+# ⚙️ 方案 A 鎖定機制：動作分析引擎（防暴走完全體防禦網）
 # =========================================================================
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
@@ -108,6 +108,7 @@ def analyze():
     is_valid = True
     play_ping = False
     
+    # 🛡️ 鋼鐵防線一：依照個別動作隔離判定，絕不交叉代償
     if exercise == "深蹲":
         if hp and kn and ak:
             current_angle = calculate_angle(hp, kn, ak)
@@ -173,8 +174,10 @@ def analyze():
         else:
             feedback = "⚠️ 請側面對鏡頭，以便AI計算身體直線度"
 
+    # 🛡️ 鋼鐵防線二：其餘動作，未開闢精準公式前鎖定計數，絕不給自動灌水的機會！
     else:
-        feedback = "有氧燃脂爆發中！維持頻率"
+        COUNTER_DB["status"] = f"{exercise}自主訓練中"
+        feedback = "請手動維持動作行程，AI 正進行姿態收集"
 
     return jsonify({
         "counter": COUNTER_DB["counter"],
