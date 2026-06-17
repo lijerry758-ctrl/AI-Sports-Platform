@@ -216,18 +216,35 @@
 
             <div class="right-box">
                 
-                <div class="dash-card ai-profile-card">
-                    <div style="font-size: 14px; color: #a5b4fc; font-weight: bold; margin-bottom: 10px;">🧬 模組 B：AI 身體素質與排課艙</div>
-                    <div class="control-row" style="margin-bottom: 5px;">
-                        <input type="number" id="user-weight" placeholder="體重 (kg)" value="70" style="width: 95px;">
-                        <select id="user-level" style="flex: 1;">
-                            <option value="beginner">🔰 運動新手 (自動過濾高衝擊動作)</option>
-                            <option value="advanced">🔥 健身老手 (全動作解鎖解禁)</option>
-                        </select>
+                <div class="control-panel" style="margin-top: 15px; border: 1px solid #4f46e5; background: rgba(17, 24, 39, 0.8); padding: 15px; border-radius: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #a5b4fc; font-weight: bold; font-size: 14px;">🎯 AI 會員智慧課表狀態</span>
+                        <a href="/profile" style="color: #818cf8; font-size: 12px; text-decoration: none; border: 1px solid #818cf8; padding: 4px 8px; border-radius: 6px;">🧬 設定身體檔案</a>
                     </div>
-                    <div id="ai-schedule-msg" style="font-size: 12px; color: #cbd5e1; margin-top: 8px; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; line-height: 1.4;">
-                        💡 AI 智慧配課提示：請輸入身體檔案。
-                    </div>
+
+                    {% if session.get('user_profile_status') == 'has_profile' %}
+                        <div style="color: #10b981; font-size: 13px; font-weight: bold; margin-bottom: 8px;">🔥 今日 AI 醫學客製課表已就位：</div>
+                        
+                        {% for note in session.get('ai_medical_notes', []) %}
+                            <div style="font-size: 11px; color: #cbd5e1; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 4px; margin-bottom: 5px; border-left: 3px solid #fbbf24;">
+                                {{ note }}
+                            </div>
+                        {% endfor %}
+
+                        <div id="ai-routine-list" style="margin-top: 10px;">
+                            {% for item in session.get('ai_schedule', []) %}
+                                <div class="routine-item" data-action="{{ item.action }}" data-target="{{ item.target }}" data-type="{{ item.type }}" style="display: flex; justify-content: space-between; background: #1f2937; padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 13px;">
+                                    <span style="font-weight: bold; color: white;">📌 {{ item.action }}</span>
+                                    <span style="color: #34d399;">{{ item.sets }} 組 × {{ item.target }}{% if item.type == 'reps' %}下{% else %}秒{% endif %}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="text-align: center; padding: 10px 0;">
+                            <p style="font-size: 12px; color: #9ca3af; margin: 0 0 10px 0;">目前為【訪客體驗模式】，僅開放手動單次練習。</p>
+                            <a href="/profile" style="display: inline-block; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 10px rgba(124,58,237,0.3);">🚀 升級解鎖 AI 智慧排課艙</a>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="control-row">
@@ -530,9 +547,19 @@
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
         camera.start();
 
-        document.addEventListener("DOMContentLoaded", function() { 
-            updateExerciseGuide(); 
-            applyAIScheduler(); // 初始化 AI 排程面板
+        // 🔄 AI 課表自動引導動態追蹤機制
+        document.addEventListener("DOMContentLoaded", function() {
+            const aiItems = document.querySelectorAll('#ai-routine-list .routine-item');
+            if (aiItems.length > 0) {
+                // 自動將主畫面的偵測選單，切換為 AI 課表推薦的第一個動作
+                const firstAction = aiItems[0].getAttribute('data-action');
+                const selectMenu = document.getElementById('pose-select'); // 你的下拉選單 id
+                if (selectMenu) {
+                    selectMenu.value = firstAction;
+                    // 觸發你原本寫好的切換動作 function (例如 changePose() 或 updateTarget())
+                    if (typeof changePose === "function") { changePose(firstAction); }
+                }
+            }
         });
     </script>
 </body>
