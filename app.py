@@ -41,7 +41,6 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
-    # 🛡️ 臨時防護線：如果找不到 dashboard.html 就先降階渲染主頁，防止直接噴 Jinja2 錯誤崩潰
     try:
         return render_template('dashboard.html')
     except:
@@ -56,7 +55,6 @@ def reset_counter():
     data = request.get_json() or {}
     current_exercise = data.get('exercise', '深蹲')
     
-    # 📦 結算心法：在清除當前畫面的 0 之前，把剛剛做完的次數「累加」進去歷史池
     if current_exercise in COUNTER_DB["history"]:
         COUNTER_DB["history"][current_exercise] += COUNTER_DB["counter"]
         
@@ -83,7 +81,6 @@ def get_session_status():
 # =========================================================================
 @app.route('/api/get_workout_stats')
 def get_workout_stats():
-    # 將後端統計好的真實次數，分包打包傳給前端前端控制艙
     labels = list(COUNTER_DB["history"].keys())
     data = list(COUNTER_DB["history"].values())
     return jsonify({
@@ -93,7 +90,7 @@ def get_workout_stats():
     })
 
 # =========================================================================
-# ⚙️ 方案 A 鎖定機制：動作分析引擎（全面覆蓋 RWD 空間防爆防線）
+# ⚙️ 方案 A 鎖定機制：動作分析引擎（品宸特製：全動作防灌水邊界格殺令）
 # =========================================================================
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
@@ -109,66 +106,77 @@ def analyze():
     play_ping = False
     
     # -----------------------------------------------------------------
+    # 🚨 終極安全機制：進行核心動作空間篩選，防止上半身晃動、雜訊直接灌水
+    # -----------------------------------------------------------------
+    if exercise in ["深蹲", "弓箭步", "橋式", "棒式支撐"]:
+        # 🛡️ 物理防禦線一：下肢與低位動作，如果鏡頭根本沒抓到腿，直接全面鎖死！
+        if not hp or not kn or not ak:
+            return jsonify({
+                "counter": COUNTER_DB["counter"], # 死鎖目前數字，絕不遞增
+                "status": "⚠️ 偵測盲區",
+                "current_knee_angle": 180,
+                "feedback": "❌ 請退後，將鏡頭往下壓，讓完整的雙腿（骨盆、膝蓋、腳踝）進入視訊艙內",
+                "is_valid": False,
+                "play_ping": False
+            })
+            
+        # 🛡️ 物理防禦線二：防止學員坐著（y軸座標太低）只露出頭在畫面上擺動誤觸
+        if hp[1] < 0.45 or kn[1] < 0.55:
+            return jsonify({
+                "counter": COUNTER_DB["counter"],
+                "status": "⚠️ 姿態高度異常",
+                "current_knee_angle": 180,
+                "feedback": "🧘 檢測到骨盆高度異常！請起身並退後兩公尺，進入完整的全身站姿範圍",
+                "is_valid": False,
+                "play_ping": False
+            })
+
+    # -----------------------------------------------------------------
     # 1. 深蹲防線
     # -----------------------------------------------------------------
     if exercise == "深蹲":
-        if hp and kn and ak:
-            # 🛡️ 高度過濾：防止拍上半身時，畫面邊緣雜訊點觸發跳動誤判
-            if hp[1] < 0.4 or kn[1] < 0.5:
-                feedback = "🧘 請退後，確保全身（包含髖關節與膝蓋）在鏡頭中下段"
-                COUNTER_DB["status"] = "偵測高度異常"
-            else:
-                current_angle = calculate_angle(hp, kn, ak)
-                if current_angle > 160:
-                    COUNTER_DB["status"] = "站直準備"
-                    if COUNTER_DB["stage"] == "down":
-                        COUNTER_DB["stage"] = "up"
-                        COUNTER_DB["counter"] += 1
-                        play_ping = True
-                elif current_angle < 100:
-                    COUNTER_DB["status"] = "下蹲頂峰"
-                    COUNTER_DB["stage"] = "down"
-                    feedback = "標準深度！穩住核心"
-                else:
-                    feedback = "標準" if COUNTER_DB["stage"] == "down" else f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
+        current_angle = calculate_angle(hp, kn, ak)
+        if current_angle > 160:
+            COUNTER_DB["status"] = "站直準備"
+            if COUNTER_DB["stage"] == "down":
+                COUNTER_DB["stage"] = "up"
+                COUNTER_DB["counter"] += 1
+                play_ping = True
+        elif current_angle < 100:
+            COUNTER_DB["status"] = "下蹲頂峰"
+            COUNTER_DB["stage"] = "down"
+            feedback = "標準深度！穩住核心"
         else:
-            feedback = "⚠️ 請將下肢、膝蓋與腳踝退至鏡頭內"
+            feedback = "標準" if COUNTER_DB["stage"] == "down" else f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
 
     # -----------------------------------------------------------------
     # 2. 弓箭步防線
     # -----------------------------------------------------------------
     elif exercise == "弓箭步":
-        if hp and kn and ak:
-            # 🛡️ 高度過濾：封鎖非跨步狀態下的晃動雜訊
-            if hp[1] < 0.4 or kn[1] < 0.5:
-                feedback = "🦵 請側身退後，讓雙腿完整出現在畫面的中下部"
-                COUNTER_DB["status"] = "偵測高度異常"
-            else:
-                current_angle = calculate_angle(hp, kn, ak)
-                if current_angle > 160:
-                    COUNTER_DB["status"] = "雙腳站立準備"
-                    if COUNTER_DB["stage"] == "down":
-                        COUNTER_DB["stage"] = "up"
-                        COUNTER_DB["counter"] += 1
-                        play_ping = True
-                elif current_angle < 110:
-                    COUNTER_DB["status"] = "跨步下蹲狀態"
-                    COUNTER_DB["stage"] = "down"
-                    feedback = "核心收緊，骨盆垂直下壓成功"
-                else:
-                    feedback = "請繼續保持跨步蹲幅"
+        current_angle = calculate_angle(hp, kn, ak)
+        if current_angle > 160:
+            COUNTER_DB["status"] = "雙腳站立準備"
+            if COUNTER_DB["stage"] == "down":
+                COUNTER_DB["stage"] = "up"
+                COUNTER_DB["counter"] += 1
+                play_ping = True
+        elif current_angle < 110:
+            COUNTER_DB["status"] = "跨步下蹲狀態"
+            COUNTER_DB["stage"] = "down"
+            feedback = "核心收緊，骨盆垂直下壓成功"
         else:
-            feedback = "⚠️ 請側身面向鏡頭，露出完整的髖、膝、踝點"
+            feedback = "請繼續保持跨步蹲幅"
 
     # -----------------------------------------------------------------
     # 3. 橋式防線
     # -----------------------------------------------------------------
     elif exercise == "橋式":
-        if sh and hp and kn:
-            # 🛡️ 躺姿嚴格檢查：如果肩膀或髖部 y 座標偏高，代表站著，一律判定為異常，直接阻斷
-            if sh[1] < 0.5 or hp[1] < 0.5:
-                feedback = "🛌 橋式為躺姿動作，請躺下並確保全身置於鏡頭低位"
+        if sh:
+            # 🛡️ 橋式特有低位檢查：躺下時，肩膀 y 座標必須接近底部（大於0.6）
+            if sh[1] < 0.6:
                 COUNTER_DB["status"] = "姿態高度異常"
+                feedback = "🛌 橋式需要躺姿進行，請躺下並確保全身體線置於鏡頭低位"
+                is_valid = False
             else:
                 current_angle = calculate_angle(sh, hp, kn)
                 if current_angle > 165:
@@ -182,30 +190,22 @@ def analyze():
                     COUNTER_DB["status"] = "臀部下放預備"
                     COUNTER_DB["stage"] = "down"
         else:
-            feedback = "⚠️ 請躺姿側對鏡頭，確保肩膀到膝蓋在畫面內"
+            feedback = "⚠️ 請確保上半身肩膀在鏡頭內"
 
     # -----------------------------------------------------------------
     # 4. 棒式支撐防線
     # -----------------------------------------------------------------
     elif exercise == "棒式支撐":
-        if sh and hp and kn:
-            # 🛡️ 低位檢查：站著搖頭晃腦直接鎖死
-            if sh[1] < 0.5 or hp[1] < 0.5:
-                feedback = "⏱️ 請呈平板撐地姿態，並將身體壓低至鏡頭中下段"
-                COUNTER_DB["status"] = "姿態高度異常"
-            else:
-                current_angle = calculate_angle(sh, hp, kn)
-                if 160 <= current_angle <= 200:
-                    COUNTER_DB["status"] = "完美棒式直線"
-                    feedback = "核心持續發力，姿勢極度標準！"
-                else:
-                    COUNTER_DB["status"] = "無效不良姿勢"
-                    is_valid = False
-                    feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
+        current_angle = calculate_angle(sh, hp, kn)
+        if 160 <= current_angle <= 200:
+            COUNTER_DB["status"] = "完美棒式直線"
+            feedback = "核心持續發力，姿勢極度標準！"
         else:
-            feedback = "⚠️ 請側面對鏡頭，以便AI計算身體直線度"
+            COUNTER_DB["status"] = "無效不良姿勢"
+            is_valid = False
+            feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
 
-    # 🛡️ 其餘自主動作（包含伏地挺身、捲腹等）：在尚未實作高度解算公式前，預設鎖定計數，禁止灌水！
+    # 🛡️ 其餘自主未解鎖動作：嚴禁執行計數器自增，死死鎖住！
     else:
         COUNTER_DB["status"] = f"{exercise}自主訓練中"
         feedback = "請手動維持動作行程，AI 正進行姿態收集"
@@ -269,8 +269,5 @@ def ai_generate_schedule():
         "notes": medical_notes
     })
 
-# =========================================================================
-# 🚀 終極啟動控制核心（這行必須永遠放在檔案的最後一根底線！）
-# =========================================================================
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
