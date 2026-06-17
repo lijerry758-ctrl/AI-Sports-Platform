@@ -87,7 +87,7 @@
             transform: translateY(-2px);
         }
         
-        /* 🚀 品宸要求：返回主頁按鈕重磅放大加粗 */
+        /* 🚀 返回主頁按鈕重磅放大加粗 */
         .btn-back {
             display: block;
             text-align: center;
@@ -142,7 +142,7 @@
         </div>
 
         <div class="form-group">
-            <label>🎯 運動經驗評估</label>
+            <label>🎯 運動經驗評慢</label>
             <select id="profile-experience">
                 <option value="beginner">🔰 運動新手 (建立神經連結、防代償機制開足)</option>
                 <option value="advanced">🔥 健身老手 (全動作解禁、解鎖鋼鐵禁區)</option>
@@ -188,22 +188,15 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === "success") {
-                    const resultBox = document.getElementById('result-box');
-                    const notesList = document.getElementById('notes-list');
-                    
-                    notesList.innerHTML = '';
-                    data.notes.forEach(note => {
-                        const div = document.createElement('div');
-                        div.className = 'note-item';
-                        div.innerHTML = note;
-                        notesList.appendChild(div);
-                    });
-                    
-                    resultBox.style.display = 'block';
-                    
-                    const utterance = new SpeechSynthesisUtterance("智慧課表已成功投射至主畫面");
+                    // 🔊 語音宣告
+                    const utterance = new SpeechSynthesisUtterance("智慧課表已成功同步，正為您跳轉回控制艙");
                     utterance.lang = 'zh-TW';
                     window.speechSynthesis.speak(utterance);
+                    
+                    // 🚀 品宸要求：同步成功後，自動無縫跳轉回鏡頭主畫面頁面！
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 800); // 給語音跟緩衝 800 毫秒即刻發射跳轉
                 }
             });
         }

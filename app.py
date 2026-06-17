@@ -4,13 +4,13 @@ import math
 app = Flask(__name__)
 app.secret_key = "cyberfit_fujen_secret_key"
 
-# 🛠️ 全域運動計數與狀態資料庫（品宸特製：數據庫完全體）
+# 🛠️ 全域運動計數與狀態資料庫
 COUNTER_DB = {
     "counter": 0,
     "status": "就位準備",
     "stage": "up",
     "mode": "reps",
-    # 📊 歷史數據池：Key 必須與前端選單完全一模一樣！
+    # 📊 歷史數據池：Key 完美對齊前端下拉選單
     "history": {
         "深蹲": 0,
         "弓箭步": 0,
@@ -19,7 +19,7 @@ COUNTER_DB = {
     }
 }
 
-# 🎯 課表組數追蹤大腦：記錄目前用戶剩餘要做的組數
+# 🎯 課表組數追蹤大腦
 SET_TRACKER = {
     "schedule": [],        # 儲存當前生成的動態課表
     "remaining_sets": {}   # 儲存結構: {"深蹲": 3, "橋式": 3}
@@ -64,24 +64,23 @@ def reset_counter():
     if current_exercise in COUNTER_DB["history"]:
         COUNTER_DB["history"][current_exercise] += COUNTER_DB["counter"]
         
-    # 📉 2. 品宸要求：後台數據庫判斷做完一次，剩餘組數就要減 1
-    # 檢查當前動作是否在正在進行的 AI 課表中
+    # 📉 2. 付費會員版專屬：判定是否觸發剩餘組數扣減
     if current_exercise in SET_TRACKER["remaining_sets"]:
-        # 尋找這個動作在課表中的單組目標次數
         target_reps = 0
         for item in SET_TRACKER["schedule"]:
             if item["action"] == current_exercise:
                 target_reps = item["target"]
                 break
         
-        # 運動醫學友善判定：只要用戶這組做到的次數達到目標的 70% 以上，就視為完成有效的一組，扣減一組！
+        # 只要達到當前組數目標次數的 70% 以上，就視為完成有效的一組，剩餘組數減 1
         if COUNTER_DB["counter"] >= (target_reps * 0.7) and SET_TRACKER["remaining_sets"][current_exercise] > 0:
             SET_TRACKER["remaining_sets"][current_exercise] -= 1
             status_msg = f"🎉 太棒了！有效完成一組，該動作剩餘組數減 1！"
         else:
-            status_msg = f"💡 次數未達標，本組視為熱身，組數未扣減。"
+            status_msg = f"💡 次數未達標（目標 {target_reps} 下），本組視為熱身，組數未扣減。"
     else:
-        status_msg = "今日數據已結算存入控制艙"
+        # 普通訪客版：自主設定，不進行後台組數扣減
+        status_msg = "今日數據已成功結算存入控制艙"
 
     COUNTER_DB["counter"] = 0
     COUNTER_DB["stage"] = "center" if "stage" in COUNTER_DB else "up"
@@ -91,34 +90,45 @@ def reset_counter():
         "counter": 0, 
         "status": COUNTER_DB["status"],
         "history": COUNTER_DB["history"],
-        "remaining_sets": SET_TRACKER["remaining_sets"] # 將最新的組數狀況回傳前端
+        "remaining_sets": SET_TRACKER["remaining_sets"] 
     })
 
 @app.route('/api/get_session_status')
 def get_session_status():
-    # 動態將後台最新的「剩餘組數」同步更新到 Session 給前端網頁渲染
+    # 🪐 品宸商業切換邏輯：若沒跑過排課演算法，強行判定為 guest 免費普通版
+    is_member = "has_profile" if SET_TRACKER["schedule"] else "guest"
+    
     updated_schedule = []
     for item in SET_TRACKER["schedule"]:
         action_name = item["action"]
-        # 從後台即時組數庫拿最新的值
         current_rem = SET_TRACKER["remaining_sets"].get(action_name, item["sets"])
         updated_schedule.append({
             "action": action_name,
             "target": item["target"],
             "type": item["type"],
-            "sets": current_rem # 這邊傳給前端看的是「剩餘組數」
+            "sets": current_rem 
         })
         
     return jsonify({
-        "user_profile_status": session.get('user_profile_status', 'guest'),
+        "user_profile_status": is_member,
         "ai_schedule": updated_schedule,
         "ai_medical_notes": session.get('ai_medical_notes', [])
     })
 
 @app.route('/api/get_workout_stats')
 def get_workout_stats():
-    labels = list(COUNTER_DB["history"].keys())
-    data = list(COUNTER_DB["history"].values())
+    # 📊 品宸過濾心法：只把「做過大於 0 下」的動作撈給 Chart.js！沒做過的動作直接隱形，不留標籤色塊
+    labels = []
+    data = []
+    for k, v in COUNTER_DB["history"].items():
+        if v > 0:
+            labels.append(k)
+            data.append(v)
+            
+    # 如果今天完全還沒開始運動，預設給個提示空狀態防止圖表報錯
+    if not data:
+        return jsonify({"labels": ["今日尚未開始運動"], "data": [0], "total_today": 0})
+        
     return jsonify({
         "labels": labels,
         "data": data,
@@ -147,7 +157,7 @@ def analyze():
                 "counter": COUNTER_DB["counter"],
                 "status": "⚠️ 偵測盲區",
                 "current_knee_angle": 180,
-                "feedback": "❌ 請退後，將鏡頭往下壓，讓完整的雙腿（骨盆、膝蓋、腳踝）進入視訊艙內",
+                "feedback": "❌ 請退後，將鏡頭往下壓，讓完整的雙腿進入視訊艙內",
                 "is_valid": False,
                 "play_ping": False
             })
@@ -237,7 +247,7 @@ def analyze():
     })
 
 # =========================================================================
-# 🦾 模組 B：AI 醫學精準排課演算法（品宸優化版：低總量、高分段、杜絕嚇跑客戶）
+# 🦾 模組 B：AI 醫學精準排課演算法
 # =========================================================================
 @app.route('/api/ai_generate_schedule', methods=['POST'])
 def ai_generate_schedule():
@@ -245,17 +255,15 @@ def ai_generate_schedule():
     weight = float(data.get('weight', 70))
     height = float(data.get('height', 170))
     experience = data.get('experience', 'beginner')
-    core_strength = data.get('core_strength', 'weak')
     
     bmi = weight / ((height / 100) ** 2)
     recommended_schedule = []
     medical_notes = []
     
-    # 🏥 運用合理的運動醫學分段心法：單組不求多（5-8下），用「多組數、低次數」建立安全神經連結
     if experience == 'beginner':
-        medical_notes.append("🔰 AI 醫學處方：依據學員檔案，採用『高分段間歇心法』，單組次數減半，保護關節與神經系統。")
+        medical_notes.append("🔰 AI 醫學處方：採用『高分段間歇心法』，單組次數減半，保護關節與神經系統。")
         if bmi >= 28:
-            medical_notes.append("💡 體重守護機制：已封鎖高衝擊動作，改由低關節壓力的躺姿動作切入。")
+            medical_notes.append("💡 體重守護機制：已主動封鎖高衝擊動作，改由低關節壓力的躺姿動作切入。")
             recommended_schedule = [
                 {"action": "深蹲", "target": 5, "type": "reps", "sets": 3},
                 {"action": "橋式", "target": 6, "type": "reps", "sets": 3}
@@ -266,18 +274,15 @@ def ai_generate_schedule():
                 {"action": "弓箭步", "target": 5, "type": "reps", "sets": 2}
             ]
     else:
-        medical_notes.append("🔥 老手釋放機制：開啟進階動作行程。")
+        medical_notes.append("🔥 老手釋放機制：開啟全量全身運動行程。")
         recommended_schedule = [
             {"action": "深蹲", "target": 12, "type": "reps", "sets": 4},
-            {"action": "弓箭步", "target": 10, "type": "reps", "sets": 3},
-            {"action": "棒式支撐", "target": 30, "type": "seconds", "sets": 3}
+            {"action": "弓箭步", "target": 10, "type": "reps", "sets": 3}
         ]
 
-    # 🧠 將生成的課表與原始組數快取存入後台追蹤大腦
     SET_TRACKER["schedule"] = recommended_schedule
     SET_TRACKER["remaining_sets"] = {item["action"]: item["sets"] for item in recommended_schedule}
 
-    session['ai_schedule'] = recommended_schedule
     session['ai_medical_notes'] = medical_notes
     session['user_profile_status'] = "has_profile"
     
