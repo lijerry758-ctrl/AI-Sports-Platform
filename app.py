@@ -250,3 +250,81 @@ def analyze():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+from flask import render_template, request, jsonify, session
+
+# 1. 建立會員檔案網頁路由
+@app.route('/profile')
+def profile_page():
+    # 這裡未來會渲染個人檔案專區，我們先確保路由暢通
+    return render_template('profile.html')
+
+# 2. 核心大腦：多維度 AI 醫學排課演算法
+@app.route('/api/ai_generate_schedule', methods=['POST'])
+def ai_generate_schedule():
+    data = request.get_json()
+    
+    # 抓取高階會員身體指標
+    weight = float(data.get('weight', 70))
+    height = float(data.get('height', 170))
+    experience = data.get('experience', 'beginner')  # beginner / advanced
+    core_strength = data.get('core_strength', 'weak') # weak / medium / strong
+    
+    # 計算 BMI 作為關節壓力基準
+    bmi = weight / ((height / 100) ** 2)
+    
+    # 初始化 AI 課表結構
+    recommended_schedule = []
+    medical_notes = []
+    
+    # 🏋️ 動作庫基本盤設定
+    # 下肢/核心：深蹲, 弓箭步, 🍑橋式, 俄羅斯轉體, 捲腹, ⏱️棒式支撐
+    # 上肢/爆發：伏地挺身, 肩推, 引體向上, 🐸波比跳, 登山者
+    
+    # 核心演算法邏輯：壓力與難度自適應降階
+    if experience == 'beginner':
+        # 情況一：過重型新手（關節壓力指數超標，實施醫學降階）
+        if bmi >= 28:
+            medical_notes.append("⚠️ AI 醫學評估：檢測到目前關節壓力指數較高且神經連結尚未建立。")
+            medical_notes.append("💡 降階處方：已將高衝擊的『弓箭步』安全置換為保護膝蓋的『🍑 橋式』，避免重力加速度摧毀髕骨。")
+            
+            recommended_schedule = [
+                {"action": "深蹲", "target": 8, "type": "reps", "sets": 3, "tip": "下蹲時膝蓋切勿內扣，想像踩裂地面。"},
+                {"action": "橋式", "target": 12, "type": "reps", "sets": 3, "tip": "頂峰收縮夾緊臀部，不要用下背死撐。"},
+                {"action": "棒式支撐", "target": 15, "type": "seconds", "sets": 3, "tip": "恥骨往胸口拉，用意志力把腰椎補平。"}
+            ]
+        # 情況二：一般新手
+        else:
+            medical_notes.append("🔰 AI 智慧提示：新學員入門，系統已為您隱藏超高難度動作（如：波比跳、引體向上）。")
+            recommended_schedule = [
+                {"action": "深蹲", "target": 12, "type": "reps", "sets": 3, "tip": "雙腳與肩同寬，想像後面有張椅子坐下去。"},
+                {"action": "伏地挺身", "target": 8, "type": "reps", "sets": 3, "tip": "手肘向內收成箭頭形（⬇️），保護肩關節。"},
+                {"action": "捲腹", "target": 10, "type": "reps", "sets": 3, "tip": "下巴想像夾著一顆網球，用腹肌把胸口推上去。"}
+            ]
+            
+    else:
+        # 情況三：高階老手艙（全動作解禁，挑戰最大訓練量，依核心強度排班）
+        medical_notes.append("🔥 AI 戰力評估：高階老手艙解鎖！11 大動作核心禁區全面開放。")
+        
+        plank_time = 60 if core_strength == 'strong' else 30
+        burpee_reps = 20 if core_strength == 'strong' else 12
+        
+        recommended_schedule = [
+            {"action": "波比跳", "target": burpee_reps, "type": "reps", "sets": 4, "tip": "雙腳後跳時肚子用力鎖死，避免骨盆塌陷砸傷腰椎。"},
+            {"action": "引體向上", "target": 8, "type": "reps", "sets": 3, "tip": "想像把手肘往褲子後口袋塞，強迫背括肌發力。"},
+            {"action": "棒式支撐", "target": plank_time, "type": "seconds", "sets": 3, "tip": "維持全身鋼鐵般的張力，切勿塌腰。"}
+        ]
+        if core_strength == 'strong':
+            recommended_schedule.append({"action": "俄羅斯轉體", "target": 20, "type": "reps", "sets": 3, "tip": "用胸口帶動轉體，而非拼命用手勾地板。"})
+
+    # 🚀 將生成的 AI 課表存入 Session，達成跨網頁、跨功能、跨權限連動投射！
+    session['ai_schedule'] = recommended_schedule
+    session['ai_medical_notes'] = medical_notes
+    session['user_profile_status'] = "has_profile" # 標記為已填寫檔案之正式會員
+    
+    return jsonify({
+        "status": "success",
+        "message": "AI 醫學排課成功！課表已同步投射至運動艙主畫面。",
+        "schedule": recommended_schedule,
+        "notes": medical_notes
+    })

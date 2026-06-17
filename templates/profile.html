@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧬 CyberFit AI 身體檔案艙</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 550px;
+            background: #111827;
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid #4f46e5;
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.2);
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            background: linear-gradient(45deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 24px;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #9ca3af;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            color: #a5b4fc;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="number"], select {
+            width: 100%;
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input[type="number"]:focus, select:focus {
+            border-color: #818cf8;
+            box-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+        }
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            color: white;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        .btn-submit:hover {
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+            transform: translateY(-1px);
+        }
+        .btn-back {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+        .btn-back:hover { color: #ffffff; }
+        
+        /* 🚨 即時診斷反饋框 */
+        #result-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px dashed #374151;
+            display: none;
+        }
+        .note-item {
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🧬 AI 身體素質與健康檔案艙</h2>
+        <div class="subtitle">輸入完整數據，由後端大腦啟動多維度運動醫學排課演算法</div>
+
+        <div class="form-group">
+            <label>📐 身高 (cm)</label>
+            <input type="number" id="profile-height" value="175" min="100" max="250">
+        </div>
+
+        <div class="form-group">
+            <label>⚖️ 體重 (kg)</label>
+            <input type="number" id="profile-weight" value="70" min="30" max="200">
+        </div>
+
+        <div class="form-group">
+            <label>🎯 運動經驗評估</label>
+            <select id="profile-experience">
+                <option value="beginner">🔰 運動新手 (建立神經連結、防代償機制開足)</option>
+                <option value="advanced">🔥 健身老手 (全動作解禁、解鎖鋼鐵禁區)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>⚡ 核心力量感知</label>
+            <select id="profile-core">
+                <option value="weak">弱 (坐姿容易駝背、棒式難以維持)</option>
+                <option value="medium">中 (有運動習慣、核心具備基本張力)</option>
+                <option value="strong">強 (具備抗轉體能力、能維持高強度間歇)</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" onclick="generateAISchedule()">⚙️ 啟動運算並同步課表</button>
+        
+        <div id="result-box">
+            <div style="color: #10b981; font-weight: bold; font-size: 14px; margin-bottom: 10px;">✅ 運算成功！AI 處方簽已就位：</div>
+            <div id="notes-list"></div>
+        </div>
+
+        <a href="/" class="btn-back">⬅️ 返回 AI 鏡頭運動艙主頁</a>
+    </div>
+
+    <script>
+        function generateAISchedule() {
+            const height = document.getElementById('profile-height').value;
+            const weight = document.getElementById('profile-weight').value;
+            const experience = document.getElementById('profile-experience').value;
+            const core_strength = document.getElementById('profile-core').value;
+
+            // 非同步回傳後端執行多維度算力
+            fetch('/api/ai_generate_schedule', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    height: height,
+                    weight: weight,
+                    experience: experience,
+                    core_strength: core_strength
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    const resultBox = document.getElementById('result-box');
+                    const notesList = document.getElementById('notes-list');
+                    
+                    notesList.innerHTML = '';
+                    data.notes.forEach(note => {
+                        const div = document.createElement('div');
+                        div.className = 'note-item';
+                        div.innerHTML = note;
+                        notesList.appendChild(div);
+                    });
+                    
+                    resultBox.style.display = 'block';
+                    
+                    // 語音通報排課完成，商業儀式感拉滿
+                    const utterance = new SpeechSynthesisUtterance("智慧課表已成功投射至主畫面");
+                    utterance.lang = 'zh-TW';
+                    window.speechSynthesis.speak(utterance);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
