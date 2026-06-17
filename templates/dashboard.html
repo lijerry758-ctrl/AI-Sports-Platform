@@ -109,53 +109,58 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // 🤖 渲染圖表一：近一週訓練量（折線圖）
-            const ctxTrend = document.getElementById('trendChart').getContext('2d');
-            new Chart(ctxTrend, {
-                type: 'line',
-                data: {
-                    labels: ['6/11', '6/12', '6/13', '6/14', '6/15', '6/16', '今日'],
-                    datasets: [{
-                        label: '累計次數',
-                        data: [45, 60, 25, 0, 80, 95, 120], // 模擬連續實測數據
-                        borderColor: '#00f2fe',
-                        backgroundGradient: 'rgba(0, 242, 254, 0.2)',
-                        backgroundColor: 'rgba(0, 242, 254, 0.05)',
-                        borderWidth: 3,
-                        tension: 0.3, // 讓折線變滑順的商業心法
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
-                    }
-                }
-            });
+            // 🚀 核心大腦通道：向後端 API 撈取計數歷史池的真實數據
+            fetch('/api/get_workout_stats')
+            .then(res => res.json())
+            .then(statsData => {
 
-            // 🤖 渲染圖表二：動作佔比（圓餅圖）
-            const ctxDist = document.getElementById('distributionChart').getContext('2d');
-            new Chart(ctxDist, {
-                type: 'doughnut', // 環形甜甜圈圖，比純圓餅圖高階
-                data: {
-                    labels: ['🏋️ 深蹲', '🧘 伏地挺身', '🧘 捲腹', '🍑 橋式', '⏱️ 棒式'],
-                    datasets: [{
-                        data: [40, 25, 15, 12, 8], // 動作次數配比
-                        backgroundColor: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 12 } } }
+                // 🤖 渲染圖表一：近一週訓練量（折線圖，將今日累計總數動態帶入）
+                const ctxTrend = document.getElementById('trendChart').getContext('2d');
+                new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: ['6/11', '6/12', '6/13', '6/14', '6/15', '6/16', '今日累計'],
+                        datasets: [{
+                            label: '累計次數',
+                            data: [45, 60, 25, 0, 80, 95, statsData.total_today], // 動態疊加今日總合
+                            borderColor: '#00f2fe',
+                            backgroundColor: 'rgba(0, 242, 254, 0.05)',
+                            borderWidth: 3,
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { grid: { color: '#1f2937' }, ticks: { color: '#9ca3af' } },
+                            x: { grid: { display: false }, ticks: { color: '#9ca3af' } }
+                        }
                     }
-                }
+                });
+
+                // 🤖 渲染圖表二：動作佔比（環形甜甜圈圖，100% 投射後端歷史數據庫）
+                const ctxDist = document.getElementById('distributionChart').getContext('2d');
+                new Chart(ctxDist, {
+                    type: 'doughnut',
+                    data: {
+                        labels: statsData.labels, // 讀取自後端的動作名稱清單
+                        datasets: [{
+                            data: statsData.data,   // 讀取自後端結算累計的真實次數
+                            backgroundColor: ['#4f46e5', '#06b6d4', '#10b981', '#f59e0b', '#ec4899'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#9ca3af', font: { size: 12 } } }
+                        }
+                    }
+                });
             });
         });
     </script>
