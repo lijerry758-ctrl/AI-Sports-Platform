@@ -16,38 +16,41 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            justify-content: center;
         }
         .container {
             width: 100%;
-            max-width: 550px;
-            background: #111827;
-            border-radius: 16px;
-            padding: 25px;
+            max-width: 600px;
+            background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+            border-radius: 20px;
+            padding: 35px;
             border: 1px solid #4f46e5;
-            box-shadow: 0 0 30px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 0 40px rgba(79, 70, 229, 0.3);
         }
         h2 {
             margin: 0 0 10px 0;
-            background: linear-gradient(45deg, #818cf8, #c084fc);
+            background: linear-gradient(45deg, #00f2fe, #7c3aed);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 24px;
+            font-size: 26px;
             text-align: center;
+            font-weight: 800;
         }
         .subtitle {
             font-size: 13px;
             color: #9ca3af;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
         label {
             display: block;
             font-size: 14px;
             color: #a5b4fc;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: bold;
         }
         input[type="number"], select {
@@ -55,23 +58,23 @@
             background: #1f2937;
             border: 1px solid #374151;
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             font-size: 15px;
             outline: none;
             transition: 0.3s;
         }
         input[type="number"]:focus, select:focus {
-            border-color: #818cf8;
-            box-shadow: 0 0 10px rgba(129, 140, 248, 0.4);
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
         }
         .btn-submit {
             width: 100%;
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             border: none;
             color: white;
-            padding: 14px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 10px;
             cursor: pointer;
             font-weight: bold;
             font-size: 16px;
@@ -80,33 +83,44 @@
             box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
         .btn-submit:hover {
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
-            transform: translateY(-1px);
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.7);
+            transform: translateY(-2px);
         }
+        
+        /* 🚀 品宸要求：返回主頁按鈕重磅放大加粗 */
         .btn-back {
             display: block;
             text-align: center;
-            margin-top: 15px;
-            color: #9ca3af;
-            text-decoration: none;
-            font-size: 13px;
-            transition: 0.3s;
-        }
-        .btn-back:hover { color: #ffffff; }
-        
-        /* 🚨 即時診斷反饋框 */
-        #result-box {
             margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px dashed #374151;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+            padding: 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-back:hover {
+            background: #334155;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+        
+        #result-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px dashed #4f46e5;
             display: none;
         }
         .note-item {
             font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 6px;
+            line-height: 1.6;
+            margin-bottom: 8px;
             color: #cbd5e1;
         }
     </style>
@@ -147,11 +161,11 @@
         <button class="btn-submit" onclick="generateAISchedule()">⚙️ 啟動運算並同步課表</button>
         
         <div id="result-box">
-            <div style="color: #10b981; font-weight: bold; font-size: 14px; margin-bottom: 10px;">✅ 運算成功！AI 處方簽已就位：</div>
+            <div style="color: #00f2fe; font-weight: bold; font-size: 14px; margin-bottom: 12px;">✅ 運算成功！AI 處方簽已就位：</div>
             <div id="notes-list"></div>
         </div>
 
-        <a href="/" class="btn-back">⬅️ 返回 AI 鏡頭運動艙主頁</a>
+        <a href="/" class="btn-back">⬅️ 安全退出並返回 AI 運動艙主頁</a>
     </div>
 
     <script>
@@ -161,7 +175,6 @@
             const experience = document.getElementById('profile-experience').value;
             const core_strength = document.getElementById('profile-core').value;
 
-            // 非同步回傳後端執行多維度算力
             fetch('/api/ai_generate_schedule', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -188,7 +201,6 @@
                     
                     resultBox.style.display = 'block';
                     
-                    // 語音通報排課完成，商業儀式感拉滿
                     const utterance = new SpeechSynthesisUtterance("智慧課表已成功投射至主畫面");
                     utterance.lang = 'zh-TW';
                     window.speechSynthesis.speak(utterance);

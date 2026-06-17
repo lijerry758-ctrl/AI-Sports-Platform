@@ -93,7 +93,7 @@ def get_workout_stats():
     })
 
 # =========================================================================
-# ⚙️ 方案 A 鎖定機制：動作分析引擎（防暴走完全體防禦網）
+# ⚙️ 方案 A 鎖定機制：動作分析引擎（全面覆蓋 RWD 空間防爆防線）
 # =========================================================================
 @app.route('/api/analyze', methods=['POST'])
 def analyze():
@@ -108,73 +108,104 @@ def analyze():
     is_valid = True
     play_ping = False
     
-    # 🛡️ 鋼鐵防線一：依照個別動作隔離判定，絕不交叉代償
+    # -----------------------------------------------------------------
+    # 1. 深蹲防線
+    # -----------------------------------------------------------------
     if exercise == "深蹲":
         if hp and kn and ak:
-            current_angle = calculate_angle(hp, kn, ak)
-            if current_angle > 160:
-                COUNTER_DB["status"] = "站直準備"
-                if COUNTER_DB["stage"] == "down":
-                    COUNTER_DB["stage"] = "up"
-                    COUNTER_DB["counter"] += 1
-                    play_ping = True
-            elif current_angle < 100:
-                COUNTER_DB["status"] = "下蹲頂峰"
-                COUNTER_DB["stage"] = "down"
-                feedback = "標準深度！穩住核心"
+            # 🛡️ 高度過濾：防止拍上半身時，畫面邊緣雜訊點觸發跳動誤判
+            if hp[1] < 0.4 or kn[1] < 0.5:
+                feedback = "🧘 請退後，確保全身（包含髖關節與膝蓋）在鏡頭中下段"
+                COUNTER_DB["status"] = "偵測高度異常"
             else:
-                feedback = "標準" if COUNTER_DB["stage"] == "down" else f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
+                current_angle = calculate_angle(hp, kn, ak)
+                if current_angle > 160:
+                    COUNTER_DB["status"] = "站直準備"
+                    if COUNTER_DB["stage"] == "down":
+                        COUNTER_DB["stage"] = "up"
+                        COUNTER_DB["counter"] += 1
+                        play_ping = True
+                elif current_angle < 100:
+                    COUNTER_DB["status"] = "下蹲頂峰"
+                    COUNTER_DB["stage"] = "down"
+                    feedback = "標準深度！穩住核心"
+                else:
+                    feedback = "標準" if COUNTER_DB["stage"] == "down" else f"下蹲深度不足，請再蹲低 {current_angle - 100}°"
         else:
             feedback = "⚠️ 請將下肢、膝蓋與腳踝退至鏡頭內"
 
+    # -----------------------------------------------------------------
+    # 2. 弓箭步防線
+    # -----------------------------------------------------------------
     elif exercise == "弓箭步":
         if hp and kn and ak:
-            current_angle = calculate_angle(hp, kn, ak)
-            if current_angle > 160:
-                COUNTER_DB["status"] = "雙腳站立準備"
-                if COUNTER_DB["stage"] == "down":
-                    COUNTER_DB["stage"] = "up"
-                    COUNTER_DB["counter"] += 1
-                    play_ping = True
-            elif current_angle < 110:
-                COUNTER_DB["status"] = "跨步下蹲狀態"
-                COUNTER_DB["stage"] = "down"
-                feedback = "核心收緊，骨盆垂直下壓成功"
+            # 🛡️ 高度過濾：封鎖非跨步狀態下的晃動雜訊
+            if hp[1] < 0.4 or kn[1] < 0.5:
+                feedback = "🦵 請側身退後，讓雙腿完整出現在畫面的中下部"
+                COUNTER_DB["status"] = "偵測高度異常"
             else:
-                feedback = "請繼續保持跨步蹲幅"
+                current_angle = calculate_angle(hp, kn, ak)
+                if current_angle > 160:
+                    COUNTER_DB["status"] = "雙腳站立準備"
+                    if COUNTER_DB["stage"] == "down":
+                        COUNTER_DB["stage"] = "up"
+                        COUNTER_DB["counter"] += 1
+                        play_ping = True
+                elif current_angle < 110:
+                    COUNTER_DB["status"] = "跨步下蹲狀態"
+                    COUNTER_DB["stage"] = "down"
+                    feedback = "核心收緊，骨盆垂直下壓成功"
+                else:
+                    feedback = "請繼續保持跨步蹲幅"
         else:
             feedback = "⚠️ 請側身面向鏡頭，露出完整的髖、膝、踝點"
 
+    # -----------------------------------------------------------------
+    # 3. 橋式防線
+    # -----------------------------------------------------------------
     elif exercise == "橋式":
         if sh and hp and kn:
-            current_angle = calculate_angle(sh, hp, kn)
-            if current_angle > 165:
-                COUNTER_DB["status"] = "臀部頂峰收縮"
-                if COUNTER_DB["stage"] == "down":
-                    COUNTER_DB["stage"] = "up"
-                    COUNTER_DB["counter"] += 1
-                    play_ping = True
-                    feedback = "夾緊臀部，動作非常標準！"
-            elif current_angle < 130:
-                COUNTER_DB["status"] = "臀部下放預備"
-                COUNTER_DB["stage"] = "down"
+            # 🛡️ 躺姿嚴格檢查：如果肩膀或髖部 y 座標偏高，代表站著，一律判定為異常，直接阻斷
+            if sh[1] < 0.5 or hp[1] < 0.5:
+                feedback = "🛌 橋式為躺姿動作，請躺下並確保全身置於鏡頭低位"
+                COUNTER_DB["status"] = "姿態高度異常"
+            else:
+                current_angle = calculate_angle(sh, hp, kn)
+                if current_angle > 165:
+                    COUNTER_DB["status"] = "臀部頂峰收縮"
+                    if COUNTER_DB["stage"] == "down":
+                        COUNTER_DB["stage"] = "up"
+                        COUNTER_DB["counter"] += 1
+                        play_ping = True
+                        feedback = "夾緊臀部，動作非常標準！"
+                elif current_angle < 130:
+                    COUNTER_DB["status"] = "臀部下放預備"
+                    COUNTER_DB["stage"] = "down"
         else:
             feedback = "⚠️ 請躺姿側對鏡頭，確保肩膀到膝蓋在畫面內"
 
+    # -----------------------------------------------------------------
+    # 4. 棒式支撐防線
+    # -----------------------------------------------------------------
     elif exercise == "棒式支撐":
         if sh and hp and kn:
-            current_angle = calculate_angle(sh, hp, kn)
-            if 160 <= current_angle <= 200:
-                COUNTER_DB["status"] = "完美棒式直線"
-                feedback = "核心持續發力，姿勢極度標準！"
+            # 🛡️ 低位檢查：站著搖頭晃腦直接鎖死
+            if sh[1] < 0.5 or hp[1] < 0.5:
+                feedback = "⏱️ 請呈平板撐地姿態，並將身體壓低至鏡頭中下段"
+                COUNTER_DB["status"] = "姿態高度異常"
             else:
-                COUNTER_DB["status"] = "無效不良姿勢"
-                is_valid = False
-                feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
+                current_angle = calculate_angle(sh, hp, kn)
+                if 160 <= current_angle <= 200:
+                    COUNTER_DB["status"] = "完美棒式直線"
+                    feedback = "核心持續發力，姿勢極度標準！"
+                else:
+                    COUNTER_DB["status"] = "無效不良姿勢"
+                    is_valid = False
+                    feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
         else:
             feedback = "⚠️ 請側面對鏡頭，以便AI計算身體直線度"
 
-    # 🛡️ 鋼鐵防線二：其餘動作，未開闢精準公式前鎖定計數，絕不給自動灌水的機會！
+    # 🛡️ 其餘自主動作（包含伏地挺身、捲腹等）：在尚未實作高度解算公式前，預設鎖定計數，禁止灌水！
     else:
         COUNTER_DB["status"] = f"{exercise}自主訓練中"
         feedback = "請手動維持動作行程，AI 正進行姿態收集"
