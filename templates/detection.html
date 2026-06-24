@@ -281,14 +281,13 @@
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
 
-        // 全域緩存，儲存目前後端撈出來的 AI 動作數據
         let activeAISchedule = [];
 
         const EXERCISE_GUIDE_DB = {
             "深蹲": { gif: "/static/images/squat.gif", audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。", faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。" },
             "弓箭步": { gif: "/static/images/lunge.gif", audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。", faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。" },
             "橋式": { gif: "/static/images/glute_bridge.gif", audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。", faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。" },
-            "俄羅斯轉體": { gif: "/static/images/russian_twist.gif", audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。", faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。" },
+            "俄羅斯轉體": { gif: "/static/images/russian_twist.gif", audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。", faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。" },
             "捲腹": { gif: "/static/images/crunch.gif", audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。", faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。" },
             "棒式支撐": { gif: "/static/images/plank.gif", audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。", faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。" },
             "伏地挺身": { gif: "/static/images/pushup.gif", audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。", faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節。請把手肘往內收，呈現「箭頭形（⬇️）」降壓。" },
@@ -298,15 +297,14 @@
             "登山者": { gif: "/static/images/mountain_climber.gif", audio: "呈伏地挺身預備姿，核心鎖死。雙腿交替快速將膝蓋向前提至胸前，維持身體穩定不左右晃動。", faq: "<strong>Q: 踩一踩屁股越抬越高、身體一直往後退？</strong><br>💡 A: 這是肩膀重心跑掉。請把肩膀死死鎖在雙手正上方，重心前壓，用腹肌把膝蓋拉上來。" }
         };
 
-        // 動態追蹤與更新目前下拉選單動作的「目標次數」
         function syncTargetInputFromExercise() {
             const currentEx = exerciseSelector.value;
             const match = activeAISchedule.find(item => item.action === currentEx);
             if (match) {
                 targetInput.value = match.target;
-                targetInput.disabled = true; // 會員版：AI自動接管，不給隨意亂改
+                targetInput.disabled = true; 
             } else {
-                targetInput.disabled = false; // 訪客版：完全自由解鎖
+                targetInput.disabled = false; 
             }
         }
 
@@ -324,7 +322,7 @@
                     setTimeout(() => { gifImg.src = guideData.gif; gifImg.style.display = "inline-block"; }, 50);
                 }
             }
-            syncTargetInputFromExercise(); // 切換動作時自動對齊目標
+            syncTargetInputFromExercise(); 
         }
 
         function playPingSound(isCelebration = false) {
@@ -355,6 +353,7 @@
         }
 
         function speakFeedback(rawText) {
+            // 🛡️ 靜止防線：只要暫停 (isPaused) 或者是挑戰成功，一律不說話阻斷語音
             if (!voiceToggle.checked || isPaused || isCelebrated) return;
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
@@ -366,7 +365,6 @@
         }
 
         exerciseSelector.addEventListener('change', () => {
-            // 切換時僅重置當前計數器，不要把大腦的 history 清掉
             countText.innerText = "0"; 
             isCelebrated = false; 
             updateExerciseGuide();
@@ -377,6 +375,7 @@
             canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
             
+            // 🛡️ 動作靜止防線：如果暫停偵測，直接 return 阻斷通訊與運算
             if (isPaused) { canvasCtx.restore(); return; }
 
             if (results.poseLandmarks) {
@@ -391,7 +390,7 @@
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
-                    // 🚀 修正：將 X、Y 座標與 Visibility 能見度分數三合一打包，發射給後端大腦判定
+                    // 🚀 品宸修正版通訊：補齊 visibility 可信度並接收後端紅綠框狀態
                     fetch('/api/analyze', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -422,14 +421,19 @@
                             playPingSound(false);
                         }
 
-                        statusText.innerText = data.status; feedbackText.innerText = data.feedback;
+                        statusText.innerText = data.status; 
+                        feedbackText.innerText = data.feedback;
+                        
                         if (data.is_valid) {
-                            statusText.style.color = "#10b981"; videoBox.style.border = "2px solid #10b981";
+                            statusText.style.color = "#10b981"; 
+                            videoBox.style.border = "4px solid #10b981";
                         } else {
-                            statusText.style.color = "#ef4444"; videoBox.style.border = "2px solid #ef4444";
+                            statusText.style.color = "#ef4444"; 
+                            videoBox.style.border = "4px solid #ef4444";
                             speakFeedback(data.feedback);
                         }
-                    });
+                    })
+                    .catch(err => console.error("分析大腦通訊錯誤:", err));
                 }
             }
             canvasCtx.restore();
@@ -439,9 +443,12 @@
             isPaused = !isPaused;
             pauseButton.innerText = isPaused ? "▶️ 恢復偵測" : "⏸️ 暫停偵測";
             pauseButton.className = isPaused ? "btn-pause paused" : "btn-pause running";
+            // 🛡️ 語音強行靜止令：按下暫停的瞬間，立刻清空系統正在排隊播放的所有語音殘留
+            if (isPaused) {
+                window.speechSynthesis.cancel();
+            }
         });
 
-        // 🔄 跨網頁身分自動判定與動態自適應雙版本刷新引擎
         function refreshAISchedule() {
             fetch('/api/get_session_status')
             .then(res => res.json())
@@ -452,12 +459,10 @@
                 const navDashboardBtn = document.getElementById('nav-dashboard-btn');
 
                 if (sessionData.user_profile_status === 'has_profile') {
-                    // 👑 情況一：判定為【正式會員版】
                     if(statusText) statusText.innerHTML = `👋 已連線，<strong style="color: #10b981;">正式會員學員</strong>`;
                     if(badge) { badge.innerText = "已連線"; badge.style.background = "#10b981"; badge.style.color = "#fff"; }
-                    if(navDashboardBtn) navDashboardBtn.style.display = 'inline-block'; // 解鎖頂部圖表入口
+                    if(navDashboardBtn) navDashboardBtn.style.display = 'inline-block'; 
 
-                    // 緩存課表到全域，供目標設定連動使用
                     activeAISchedule = sessionData.ai_schedule || [];
 
                     let notesHtml = '';
@@ -468,7 +473,7 @@
                     let listHtml = '';
                     sessionData.ai_schedule.forEach(item => {
                         let statusBadge = item.sets > 0 
-                            ? `<span style="color: #fbbf24; font-weight: bold;">（剩餘 ${item.sets} 組）</span>`
+                            ? `<span>（剩餘 ${item.sets} 組）</span>`
                             : `<span style="color: #10b981; font-weight: bold;">✅ 已全量完賽！</span>`;
                         
                         let opacityStyle = item.sets > 0 ? '' : 'opacity: 0.4; text-decoration: line-through;';
@@ -486,7 +491,6 @@
                         <div style="margin-top: 10px;">${listHtml}</div>
                     `;
 
-                    // 首次加載，若有課表則自動切換至第一個動作
                     if (sessionData.ai_schedule.length > 0 && landmarkHistory.length === 0) {
                         const firstAction = sessionData.ai_schedule[0].action;
                         if (exerciseSelector.value !== firstAction) {
@@ -496,13 +500,12 @@
                     syncTargetInputFromExercise();
 
                 } else {
-                    // 👤 情況二：判定為【免費普通版（大氣自訂模式）】
                     if(statusText) statusText.innerHTML = `👋 歡迎體驗，<strong style="color: #00f2fe;">普通版學員</strong>`;
                     if(badge) { badge.innerText = "未解鎖"; badge.style.background = "#374151"; badge.style.color = "#9ca3af"; }
-                    if(navDashboardBtn) navDashboardBtn.style.display = 'none'; // 隱藏圖表入口
+                    if(navDashboardBtn) navDashboardBtn.style.display = 'none'; 
 
                     activeAISchedule = [];
-                    targetInput.disabled = false; // 開放自由調整目標
+                    targetInput.disabled = false; 
 
                     contentBox.innerHTML = `
                         <div style="text-align: center; padding: 10px 0;">
@@ -514,7 +517,6 @@
             });
         }
 
-        // 🔄 點擊重設數據按鈕：發送當前動作名稱結算，並即時刷新進度看板
         resetButton.addEventListener('click', () => {
             fetch('/api/reset_counter', { 
                 method: 'POST',
@@ -526,7 +528,7 @@
                 countText.innerText = "0"; 
                 isCelebrated = false;
                 statusText.innerText = data.status; 
-                refreshAISchedule(); // 🚀 結算完立即同步前端組數看板！
+                refreshAISchedule(); 
             });
         });
 
@@ -537,7 +539,6 @@
         const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
         camera.start();
 
-        // 🎯 網頁一打開，執行初始化雙版本切換與口述要領載入
         document.addEventListener("DOMContentLoaded", () => {
             refreshAISchedule();
             updateExerciseGuide();
