@@ -391,18 +391,19 @@
                 if (currentTime - lastAnalysisTime > ANALYSIS_INTERVAL) {
                     lastAnalysisTime = currentTime;
 
+                    // 🚀 修正：將 X、Y 座標與 Visibility 能見度分數三合一打包，發射給後端大腦判定
                     fetch('/api/analyze', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             exercise: exerciseSelector.value,
                             mode: document.getElementById('mode-selector').value,
-                            shoulder: stableLandmarks[12] ? [stableLandmarks[12].x, stableLandmarks[12].y] : null,
-                            elbow: stableLandmarks[14] ? [stableLandmarks[14].x, stableLandmarks[14].y] : null,
-                            wrist: stableLandmarks[16] ? [stableLandmarks[16].x, stableLandmarks[16].y] : null,
-                            hip: stableLandmarks[24] ? [stableLandmarks[24].x, stableLandmarks[24].y] : null,
-                            knee: stableLandmarks[26] ? [stableLandmarks[26].x, stableLandmarks[26].y] : null,
-                            ankle: stableLandmarks[28] ? [stableLandmarks[28].x, stableLandmarks[28].y] : null
+                            shoulder: stableLandmarks[12] ? [stableLandmarks[12].x, stableLandmarks[12].y, stableLandmarks[12].visibility] : null,
+                            elbow: stableLandmarks[14] ? [stableLandmarks[14].x, stableLandmarks[14].y, stableLandmarks[14].visibility] : null,
+                            wrist: stableLandmarks[16] ? [stableLandmarks[16].x, stableLandmarks[16].y, stableLandmarks[16].visibility] : null,
+                            hip: stableLandmarks[24] ? [stableLandmarks[24].x, stableLandmarks[24].y, stableLandmarks[24].visibility] : null,
+                            knee: stableLandmarks[26] ? [stableLandmarks[26].x, stableLandmarks[26].y, stableLandmarks[26].visibility] : null,
+                            ankle: stableLandmarks[28] ? [stableLandmarks[28].x, stableLandmarks[28].y, stableLandmarks[28].visibility] : null
                         })
                     })
                     .then(res => res.json())

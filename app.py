@@ -95,7 +95,7 @@ def reset_counter():
 
 @app.route('/api/get_session_status')
 def get_session_status():
-    # 🪐 品宸商業切換邏輯：若沒跑過排課演算法，強行判定為 guest 免費普通版
+    # 🪐 商業切換邏輯：若沒跑過排課演算法，強行判定為 guest 免費普通版
     is_member = "has_profile" if SET_TRACKER["schedule"] else "guest"
     
     updated_schedule = []
@@ -117,7 +117,7 @@ def get_session_status():
 
 @app.route('/api/get_workout_stats')
 def get_workout_stats():
-    # 📊 品宸過濾心法：只把「做過大於 0 下」的動作撈給 Chart.js！沒做過的動作直接隱形，不留標籤色塊
+    # 📊 過濾：只把「做過大於 0 下」的動作撈給 Chart.js！沒做過的動作直接隱形，不留標籤色塊
     labels = []
     data = []
     for k, v in COUNTER_DB["history"].items():
@@ -143,6 +143,7 @@ def analyze():
     data = request.get_json() or {}
     exercise = data.get('exercise', '深蹲')
     
+    # 接收前端傳入的座標與可信度分數 [x, y, visibility]
     sh, el, wr = data.get('shoulder'), data.get('elbow'), data.get('wrist')
     hp, kn, ak = data.get('hip'), data.get('knee'), data.get('ankle')
 
@@ -151,27 +152,40 @@ def analyze():
     is_valid = True
     play_ping = False
     
+    # =========================================================================
+    # 🦾 全動作下肢與核心盲區全鎖死閘門（解決頭頂晃動誤算 Bug）
+    # =========================================================================
     if exercise in ["深蹲", "弓箭步", "橋式", "棒式支撐"]:
+        # 1. 基礎存在判定
         if not hp or not kn or not ak:
             return jsonify({
-                "counter": COUNTER_DB["counter"],
-                "status": "⚠️ 偵測盲區",
-                "current_knee_angle": 180,
-                "feedback": "❌ 請退後，將鏡頭往下壓，讓完整的雙腿進入視訊艙內",
-                "is_valid": False,
-                "play_ping": False
+                "counter": COUNTER_DB["counter"], "status": "⚠️ 偵測盲區", "current_knee_angle": 180,
+                "feedback": "❌ 請退後，將鏡頭往下壓，讓完整的身體與雙腿進入視訊艙內",
+                "is_valid": False, "play_ping": False
             })
             
-        if hp[1] < 0.45 or kn[1] < 0.55:
-            return jsonify({
-                "counter": COUNTER_DB["counter"],
-                "status": "⚠️ 姿態高度異常",
-                "current_knee_angle": 180,
-                "feedback": "🧘 檢測到骨盆高度異常！請起身並退後兩公尺，進入完整的全身站姿範圍",
-                "is_valid": False,
-                "play_ping": False
-            })
+        # 2. Visibility 能見度可信度防禦
+        # 檢查髖、膝、踝的可信度分數，只要其中一個低於 60%（0.6），一槍斃命阻斷！
+        if len(hp) > 2 and len(kn) > 2 and len(ak) > 2:
+            if hp[2] < 0.6 or kn[2] < 0.6 or ak[2] < 0.6:
+                return jsonify({
+                    "counter": COUNTER_DB["counter"], "status": "⚠️ 核心關節遮擋", "current_knee_angle": 180,
+                    "feedback": "❌ 偵測到下半身被遮擋或未入鏡！請確保髖、膝、踝清晰可見",
+                    "is_valid": False, "play_ping": False
+                })
 
+        # 3. 站姿高度異常判定（深蹲、弓箭步適用）
+        if exercise in ["深蹲", "弓箭步"]:
+            if hp[1] < 0.45 or kn[1] < 0.55:
+                return jsonify({
+                    "counter": COUNTER_DB["counter"], "status": "⚠️ 姿態高度異常", "current_knee_angle": 180,
+                    "feedback": "🧘 檢測到高度異常！請起身並退後兩公尺，進入完整的全身範圍",
+                    "is_valid": False, "play_ping": False
+                })
+
+    # =========================================================================
+    # ⚡ 各動作幾何邏輯與動態狀態機判定
+    # =========================================================================
     if exercise == "深蹲":
         current_angle = calculate_angle(hp, kn, ak)
         if current_angle > 160:
@@ -222,16 +236,21 @@ def analyze():
                     COUNTER_DB["stage"] = "down"
         else:
             feedback = "⚠️ 請確保上半身肩膀在鏡頭內"
+            is_valid = False
 
     elif exercise == "棒式支撐":
-        current_angle = calculate_angle(sh, hp, kn)
-        if 160 <= current_angle <= 200:
-            COUNTER_DB["status"] = "完美棒式直線"
-            feedback = "核心持續發力，姿勢極度標準！"
+        if sh:
+            current_angle = calculate_angle(sh, hp, kn)
+            if 160 <= current_angle <= 200:
+                COUNTER_DB["status"] = "完美棒式直線"
+                feedback = "核心持續發力，姿勢極度標準！"
+            else:
+                COUNTER_DB["status"] = "無效不良姿勢"
+                is_valid = False
+                feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
         else:
-            COUNTER_DB["status"] = "無效不良姿勢"
+            feedback = "⚠️ 請確保上半身肩膀在鏡頭內"
             is_valid = False
-            feedback = "🚨 塌腰代償！請挺起肚子" if current_angle < 160 else "🚨 屁股抬得太高了！請壓回直線"
 
     else:
         COUNTER_DB["status"] = f"{exercise}自主訓練中"
