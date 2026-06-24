@@ -276,7 +276,7 @@
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
         let lastSpeakTime = 0;
-        const SPEAK_INTERVAL = 3000; 
+        const SPEAK_INTERVAL = 10000; 
         let isCelebrated = false; 
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
@@ -353,13 +353,20 @@
         }
 
         function speakFeedback(rawText) {
-            // 🛡️ 靜止防線：只要暫停 (isPaused) 或者是挑戰成功，一律不說話阻斷語音
-            if (!voiceToggle.checked || isPaused || isCelebrated) return;
+            // 🛡️ 雙重靜音鎖：暫停、挑戰成功、或關閉語音時，立刻當場掐死語音
+            if (isPaused || !voiceToggle.checked || isCelebrated) {
+                window.speechSynthesis.cancel();
+                return;
+            }
             const currentTime = Date.now();
+            // ⏳ 時間鎖：必須距離上次說話超過 8 秒，才准放行
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
+                if (isPaused) return; 
+                
                 lastSpeakTime = currentTime;
                 const utterance = new SpeechSynthesisUtterance(rawText);
-                utterance.lang = 'zh-TW'; utterance.rate = 1.2;
+                utterance.lang = 'zh-TW'; 
+                utterance.rate = 1.2; // 稍微輕快俐落的速度，講完就停
                 window.speechSynthesis.speak(utterance);
             }
         }

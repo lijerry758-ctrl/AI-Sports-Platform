@@ -167,7 +167,7 @@ def analyze():
         # 2. Visibility 能見度可信度防禦
         # 檢查髖、膝、踝的可信度分數，只要其中一個低於 60%（0.6），一槍斃命阻斷！
         if len(hp) > 2 and len(kn) > 2 and len(ak) > 2:
-            if hp[2] < 0.6 or kn[2] < 0.6 or ak[2] < 0.6:
+            if hp[2] < 0.1 or kn[2] < 0.1 or ak[2] < 0.1:
                 return jsonify({
                     "counter": COUNTER_DB["counter"], "status": "⚠️ 核心關節遮擋", "current_knee_angle": 180,
                     "feedback": "❌ 偵測到下半身被遮擋或未入鏡！請確保髖、膝、踝清晰可見",
@@ -176,7 +176,7 @@ def analyze():
 
         # 3. 站姿高度異常判定（深蹲、弓箭步適用）
         if exercise in ["深蹲", "弓箭步"]:
-            if hp[1] < 0.45 or kn[1] < 0.55:
+            if hp[1] < 0.20 or kn[1] < 0.20:
                 return jsonify({
                     "counter": COUNTER_DB["counter"], "status": "⚠️ 姿態高度異常", "current_knee_angle": 180,
                     "feedback": "🧘 檢測到高度異常！請起身並退後兩公尺，進入完整的全身範圍",
