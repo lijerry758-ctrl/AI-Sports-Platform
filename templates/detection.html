@@ -181,11 +181,18 @@
 
     <div class="header-container">
         <h1>⚡ CyberFit 賽博 AI 運動艙</h1>
-        <div class="user-panel">
-            <span id="member-status-text">👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
-            <a id="nav-dashboard-btn" href="/dashboard" class="btn-nav-dashboard" style="background: linear-gradient(135deg, #f59e0b 0%, #eab308 100%); color: black; display: none;">📊 數據控制艙</a>
-            <a href="/profile" class="btn-nav-dashboard">🧬 進入身體檔案艙</a>
-        </div>
+            <div class="user-panel">
+                <span id="member-status-text">👋 歡迎體驗，<strong style="color: #00f2fe;">訪客學員</strong></span>
+                
+                <!-- 🔥 這是你原本就有的數據控制艙 -->
+                <a id="nav-dashboard-btn" href="/dashboard" class="btn-nav-dashboard" style="background: linear-gradient(135deg, #f59e0b 0%, #eab308 100%); color: black; display: none;">📊 數據控制艙</a>
+                
+                <!-- 🚀 【新增：老師指定的爬蟲分頁按鈕】點下去全自動開新分頁，連向爬蟲醫學文獻呈現頁面！ -->
+                <a href="/events" target="_blank" class="btn-nav-dashboard" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">🌐 國際醫學文獻艙</a>
+                
+                <!-- 🔥 這是你原本就有的身體檔案艙 -->
+                <a href="/profile" class="btn-nav-dashboard">🧬 進入身體檔案艙</a>
+            </div>
     </div>
 
     <div class="main-layout">
