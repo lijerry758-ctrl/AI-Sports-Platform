@@ -87,6 +87,13 @@ def dashboard():
 def profile_page():
     return render_template('profile.html')
 
+# 🔥 1. 手動幫老師補上他要的「爬蟲文獻展示頁面」前端網頁路由！
+@app.route('/events')
+def events_page():
+    # 這裡會去讀取你的資料庫，或者直接渲染你的爬蟲成果頁面
+    # ⚠️ 確保你的 templates 資料夾裡面有一個叫做 events.html (或你小組爬蟲結果的 html 名稱)
+    return render_template('events.html')
+
 @app.route('/api/reset_counter', methods=['POST'])
 def reset_counter():
     data = request.get_json() or {}
