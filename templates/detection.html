@@ -272,6 +272,10 @@
                     <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
                 </div>
 
+                <div style="text-align: center; margin-bottom: 5px; background: #111827; padding: 10px; border-radius: 8px; border: 1px dashed #3b3b5c; min-height: 180px; display: flex; align-items: center; justify-content: center;">
+                    <img id="guide-gif" src="" alt="動作示範動畫" style="max-width: 100%; height: 160px; border-radius: 6px; display: none;">
+                </div>
+
                 <div style="background: #1f2937; padding: 12px; border-radius: 8px; font-size: 13px;">
                     <h4 style="color: #ffaa00; margin: 0 0 6px 0;">💡 30秒動作口述要領：</h4>
                     <p id="guide-audio-text" style="color: #e0e0e0; margin: 0 0 10px 0; line-height: 1.4;">載入中...</p>
@@ -304,7 +308,8 @@
         let lastAnalysisTime = 0;
         const ANALYSIS_INTERVAL = 300; 
         let lastSpeakTime = 0;
-        const SPEAK_INTERVAL = 10000; 
+        const SPEAK_INTERVAL = 6000; // 🔥 縮短為 6 秒，讓代償錯誤語音提示更密集敏捷，不再死寂
+
         let isCelebrated = false; 
         let landmarkHistory = [];
         const SMOOTH_FRAMES = 3; 
@@ -386,6 +391,7 @@
             return smoothed;
         }
 
+        // 🔥 【語音引擎優化】修復改版造成的全動作代償發聲中斷阻斷
         function speakFeedback(rawText) {
             if (isPaused || !voiceToggle.checked || isCelebrated) {
                 window.speechSynthesis.cancel();
@@ -393,8 +399,6 @@
             }
             const currentTime = Date.now();
             if (currentTime - lastSpeakTime > SPEAK_INTERVAL) {
-                if (isPaused) return; 
-                
                 lastSpeakTime = currentTime;
                 const utterance = new SpeechSynthesisUtterance(rawText);
                 utterance.lang = 'zh-TW'; 
@@ -448,28 +452,37 @@
                         countText.innerText = data.counter;
 
                         const userTarget = parseInt(targetInput.value) || 10;
+                        
+                        // 🔔 【打標與達標語音修復】
                         if (data.counter >= userTarget && !isCelebrated) {
-                            isCelebrated = true; playPingSound(true);
+                            isCelebrated = true; 
+                            playPingSound(true); // 觸發打標成功 Triangle 高音
                             if (voiceToggle.checked) {
                                 window.speechSynthesis.cancel(); 
                                 const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！挑戰成功！`);
                                 celebUtterance.lang = 'zh-TW'; window.speechSynthesis.speak(celebUtterance);
                             }
                         } else if (data.play_ping && data.counter < userTarget) {
-                            playPingSound(false);
+                            playPingSound(false); // 每成功一下播放計次 Sine 低音
                         }
 
                         statusText.innerText = data.status; 
                         feedbackText.innerText = data.feedback;
                         
+                        // 🔊 【代償與即時指導語音焊回】全動作完美連動紅綠框狀態
                         if (data.is_valid) {
                             statusText.style.color = "#10b981"; 
                             videoBox.style.border = "4px solid #10b981";
+                            // 動作做對時清除排隊語音，避免干擾
                             window.speechSynthesis.cancel();
                         } else {
                             statusText.style.color = "#ef4444"; 
                             videoBox.style.border = "4px solid #ef4444";
-                            speakFeedback(data.feedback);
+                            
+                            // 只要後端判定不標準（包含深蹲不夠低、或任何上肢代償），立刻語音播報糾正
+                            if (data.feedback && data.feedback !== "等待分析幾何數據...") {
+                                speakFeedback(data.feedback);
+                            }
                         }
                     })
                     .catch(err => console.error("分析大腦通訊錯誤:", err));
@@ -488,6 +501,7 @@
             }
         });
 
+        // 📊 【排課系統連動修復】對接後端 api_generate_schedule，將生成的課表完美拉進前端
         function refreshAISchedule() {
             fetch('/api/get_session_status')
             .then(res => res.json())
@@ -571,12 +585,10 @@
             });
         });
 
-        // 🤖 【AI 核心修正】強制指定 Wasm 全域網址，解決別人電腦找不到 MediaPipe 計算核心的 CORS 斷線問題
         const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
         pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose.onResults(onResults);
 
-        // 📱 【Android 鏡頭破局修正】將原本一開網頁就硬開鏡頭的程式碼，修改為「點擊按鈕觸發」的 UX 機制！
         const camera = new Camera(videoElement, { 
             onFrame: async () => { 
                 await pose.send({image: videoElement}); 
@@ -585,7 +597,6 @@
             height: 480 
         });
 
-        // 監聽引導蓋板的點擊事件（符合 Android 隱私安全規範，100% 能彈出權限請求視窗）
         gateBtn.addEventListener('click', () => {
             console.log("⚡ 觸發使用者主動點擊，正在向系統請求鏡頭權限...");
             camera.start()

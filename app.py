@@ -329,7 +329,7 @@ def ai_generate_schedule():
     if experience == 'beginner':
         medical_notes.append("🔰 AI 醫學處方：採用『高分段間歇心法』，單組次數減半，保護關節與神經系統。")
         if bmi >= 28:
-            medical_notes.append("💡 體重守護機制：已主動封鎖高衝擊動作，改由低關節壓力的躺姿動作切入。")
+            medical_notes.append("💡 體重守護機制：已主動封鎖高衝擊動作，改由低關節壓力的躺姿動作切切入。")
             recommended_schedule = [
                 {"action": "深蹲", "target": 5, "type": "reps", "sets": 3},
                 {"action": "橋式", "target": 6, "type": "reps", "sets": 3}
@@ -346,12 +346,17 @@ def ai_generate_schedule():
             {"action": "弓箭步", "target": 10, "type": "reps", "sets": 3}
         ]
 
+    # 1. 保留你原本的全域變數寫入（如果你後端其他地方有用到）
     SET_TRACKER["schedule"] = recommended_schedule
     SET_TRACKER["remaining_sets"] = {item["action"]: item["sets"] for item in recommended_schedule}
 
+    # 🔥 2. 關鍵加固：寫入前端 refreshAISchedule() 正在嗷嗷待哺的對應 session 欄位！
+    from flask import session
     session['ai_medical_notes'] = medical_notes
     session['user_profile_status'] = "has_profile"
-    
+    session['ai_schedule'] = recommended_schedule  # 補上這行，前端網頁才抓得到！
+    session.modified = True                         # 強制 Flask 刷寫 session 狀態
+
     return jsonify({
         "status": "success",
         "schedule": recommended_schedule,
