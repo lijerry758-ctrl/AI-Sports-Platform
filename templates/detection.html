@@ -62,7 +62,6 @@
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
         }
         
-        /* 🖥️ 電腦端預設布局 */
         .main-layout {
             display: block;
             width: 100%;
@@ -138,7 +137,28 @@
         .dash-card.error { border-left-color: #ef4444; }
         .dash-card.success { border-left-color: #10b981; }
 
-        /* 📱 手機端 RWD 響應式佈局 */
+        /* 🔥 UX 蓋板提示樣式：引導老師點擊觸發瀏覽器權限機制 */
+        #camera-gateoverlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(11, 15, 25, 0.95);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .btn-start-camera {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+            color: #000; border: none; padding: 12px 24px;
+            border-radius: 8px; font-weight: bold; font-size: 16px;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,242,254,0.4);
+            transition: 0.2s; margin-top: 15px;
+        }
+        .btn-start-camera:hover { transform: scale(1.05); }
+
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
             .header-container { flex-direction: column; gap: 10px; text-align: center; }
@@ -173,6 +193,12 @@
             
             <div class="left-box">
                 <div id="video-box">
+                    <div id="camera-gateoverlay">
+                        <span style="color: #00f2fe; font-size: 24px;">🤖</span>
+                        <h3 style="margin: 10px 0 5px 0; font-size: 16px; color: #fff;">AI 幾何控制艙就緒</h3>
+                        <p style="font-size: 12px; color: #9ca3af; max-width: 80%; margin: 0;">請點擊下方按鈕授權視訊鏡頭，即可啟動 MediaPipe 實時動作代償偵測</p>
+                        <button id="gate-start-btn" class="btn-start-camera">⚡ 點擊啟動 AI 鏡頭</button>
+                    </div>
                     <video id="webcam" autoplay playsinline></video>
                     <canvas id="output_canvas" width="640" height="480"></canvas>
                 </div>
@@ -271,6 +297,8 @@
         const pauseButton = document.getElementById('pause-button');
         const resetButton = document.getElementById('reset-button'); 
         const targetInput = document.getElementById('target-count');  
+        const gateBtn = document.getElementById('gate-start-btn');
+        const gateOverlay = document.getElementById('camera-gateoverlay');
 
         let isPaused = false; 
         let lastAnalysisTime = 0;
@@ -282,13 +310,13 @@
         const SMOOTH_FRAMES = 3; 
 
         let activeAISchedule = [];
-    const EXERCISE_GUIDE_DB = {
+        const EXERCISE_GUIDE_DB = {
             "深蹲": { gif: "/static/images/squat.gif", audio: "雙腳與肩同寬，腳尖微外展。想像後面有張椅子坐下去，核心收緊，下蹲至大腿與地面平行後大腿發力站起。", faq: "<strong>Q: 蹲完膝蓋痛、腰酸？</strong><br>💡 A: 可能是膝蓋內夾或骨盆後傾。下蹲時請想像把地面「踩裂」強迫肌肉發力。" },
             "弓箭步": { gif: "/static/images/lunge.gif", audio: "身體直立，向前邁出一步下蹲，前大腿與地面平行，後膝接近地面。核心保持穩定，隨後前腳發力推回原位。", faq: "<strong>Q: 跨步蹲時膝蓋搖晃不穩？</strong><br>💡 A: 這是臀中肌無力導致。請確保前腳膝蓋始終對準腳尖第二根趾頭，切勿內扣代償。" },
             "橋式": { gif: "/static/images/glute_bridge.gif", audio: "平躺屈膝，雙腳踩地。主要由臀部發力抬起骨盆，使身體從肩膀到膝蓋呈一直線，頂峰收縮一秒後緩慢下放。", faq: "<strong>Q: 抬起時都是大腿後側或下背在酸？</strong><br>💡 A: 這是臀肌罷工。請嘗試將腳跟往內踩緊，抬起時用力「夾緊屁股」而非單純往上挺腰。" },
-            "俄羅斯轉體": { gif: "/static/images/russian_twist.gif", audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。", faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。" },
+            "俄羅斯轉體": { gif: "/static/images/russian_twist.gif", audio: "坐姿雙腳微屈，身體微微後傾保持核心緊繃。雙手合十，運用腹內外斜肌的力量帶動轉體，左右交替觸地。", faq: "<strong>Q: 轉久了覺得下背（腰部）非常刺痛？</strong><br>💡 A: 這是腰椎過度扭轉代償。請保持胸膛挺直，用「胸口」轉動，而非拼命用手去勾地板。" },
             "捲腹": { gif: "/static/images/crunch.gif", audio: "平躺雙腳屈膝踩地，雙手置於耳側。想像將肋骨往骨盆方向靠攏，肚子用力捲起上半身至肩胛骨離地即可。", faq: "<strong>Q: 做完脖子非常酸痛、手快把頭拔斷？</strong><br>💡 A: 這是用頸椎代償。請雙手改為交叉貼在胸前，捲起時想像下巴夾著一顆網球，用腹肌把胸口推上去。" },
-            "棒式支撐": { gif: "/static/images/plank.gif", audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。", faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償。請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。" },
+            "棒式支撐": { gif: "/static/images/plank.gif", audio: "手肘撐地置於肩膀正下方，腳尖踩地，身體從頭到腳保持一直線，腹肌與臀部用力收緊，切勿塌腰。", faq: "<strong>Q: 撐久了下背（腰部）非常酸？</strong><br>💡 A: 這是腹肌罷工導致塌腰代償. 請用意志力把恥骨往胸口拉，用力縮肚子把腰椎補平。" },
             "伏地挺身": { gif: "/static/images/pushup.gif", audio: "雙手略寬於肩撐地，身體呈一直線。下壓時手肘與軀幹呈約 45 度角，胸部接近地面後，發力將身體推回。", faq: "<strong>Q: 做完肩膀前側很痛？</strong><br>💡 A: 你的手肘外展成 90 度夾擊肩關節. 請把手肘往內收，呈現「箭頭形（⬇️）」降壓。" },
             "肩推": { gif: "/static/images/shoulder_press.gif", audio: "挺胸坐直，核心收緊。雙手持重物於肩膀兩側，垂直往上推至手臂打直但不鎖死，再沿原路徑緩慢下放。", faq: "<strong>Q: 推完下背（腰部）非常酸痛？</strong><br>💡 A: 重量太重挺腰代償。請立刻減輕重量，並在推起時用力縮肚子夾緊屁股。" },
             "引體向上": { gif: "/static/images/pullup.gif", audio: "雙手略寬於肩正握單槓，背括肌發力將身體往上拉，直到下巴超過單槓，隨後緩慢控制下放速度。", faq: "<strong>Q: 拉上去時脖子僵硬、手臂爆酸？</strong><br>💡 A: 這是聳肩且過度用二頭肌死拉。請想像把「手肘往褲子後口袋塞」，強迫背部發力。" },
@@ -423,7 +451,6 @@
                         if (data.counter >= userTarget && !isCelebrated) {
                             isCelebrated = true; playPingSound(true);
                             if (voiceToggle.checked) {
-                                // 🔊 10個大標達標語音提示完美焊回首頁第一現場
                                 window.speechSynthesis.cancel(); 
                                 const celebUtterance = new SpeechSynthesisUtterance(`恭喜達標！挑戰成功！`);
                                 celebUtterance.lang = 'zh-TW'; window.speechSynthesis.speak(celebUtterance);
@@ -438,14 +465,10 @@
                         if (data.is_valid) {
                             statusText.style.color = "#10b981"; 
                             videoBox.style.border = "4px solid #10b981";
-                            
-                            // 🚀 綠框消音令：一做對，其餘排隊中的代償語音立刻閉嘴
                             window.speechSynthesis.cancel();
                         } else {
                             statusText.style.color = "#ef4444"; 
                             videoBox.style.border = "4px solid #ef4444";
-                            
-                            // 🔊 紅框時代償反饋語音（例如：蹲深一點）重出江湖！
                             speakFeedback(data.feedback);
                         }
                     })
@@ -548,12 +571,33 @@
             });
         });
 
+        // 🤖 【AI 核心修正】強制指定 Wasm 全域網址，解決別人電腦找不到 MediaPipe 計算核心的 CORS 斷線問題
         const pose = new Pose({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}` });
         pose.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
         pose.onResults(onResults);
 
-        const camera = new Camera(videoElement, { onFrame: async () => { await pose.send({image: videoElement}); }, width: 640, height: 480 });
-        camera.start();
+        // 📱 【Android 鏡頭破局修正】將原本一開網頁就硬開鏡頭的程式碼，修改為「點擊按鈕觸發」的 UX 機制！
+        const camera = new Camera(videoElement, { 
+            onFrame: async () => { 
+                await pose.send({image: videoElement}); 
+            }, 
+            width: 640, 
+            height: 480 
+        });
+
+        // 監聽引導蓋板的點擊事件（符合 Android 隱私安全規範，100% 能彈出權限請求視窗）
+        gateBtn.addEventListener('click', () => {
+            console.log("⚡ 觸發使用者主動點擊，正在向系統請求鏡頭權限...");
+            camera.start()
+            .then(() => {
+                console.log("✅ 鏡頭權限取得成功，隱藏引導蓋板！");
+                gateOverlay.style.display = 'none';
+            })
+            .catch(err => {
+                alert("無法取得相機源，請確認是否封鎖了網頁相機權限！\n錯誤訊息: " + err);
+                statusText.innerText = "❌ 鏡頭啟動失敗";
+            });
+        });
 
         document.addEventListener("DOMContentLoaded", () => {
             refreshAISchedule();
