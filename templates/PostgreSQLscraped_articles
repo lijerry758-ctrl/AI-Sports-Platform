@@ -1,0 +1,25 @@
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+@app.route('/events')
+def events_page():
+    try:
+        # 1. 使用你專案原本連線 PostgreSQL 的設定（這裡以環境變數為例）
+        DATABASE_URL = os.environ.get("DATABASE_URL")
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # 2. 去撈出組員用 Selenium 爬進資料庫的權威學術論文數據
+        # ⚠️ 請把 scraped_articles 換成你們實體資料庫裡爬蟲落地成功的那個資料表名稱！
+        cursor.execute("SELECT * FROM scraped_articles ORDER BY id DESC LIMIT 50;")
+        articles = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        # 3. 把資料庫撈出來的陣列，直接丟給前端 templates/events.html 渲染
+        return render_template('events.html', articles=articles)
+    except Exception as e:
+        print(f"❌ 讀取爬蟲資料庫失敗: {e}")
+        # 如果資料庫還沒建好或有問題，先丟空陣列給前端，至少不要噴 500 錯誤
+        return render_template('events.html', articles=[])

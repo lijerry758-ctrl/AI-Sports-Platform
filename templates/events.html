@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>🌐 CyberFit 國際醫學文獻大數據艙</title>
+    <style>
+        body { background-color: #0b0f19; color: #fff; font-family: sans-serif; padding: 20px; }
+        h1 { color: #00f2fe; border-bottom: 2px solid #1f2937; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #111827; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #1f2937; }
+        th { background-color: #1f2937; color: #00f2fe; }
+        a { color: #4facfe; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🌐 PubMed 醫學爬蟲實時採集數據 (整合控制艙)</h1>
+    <p>以下數據由後端 Selenium 引擎對準美國國家醫學圖書館進行無頭採集，並即時落地於雲端資料庫：</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>項目 ID</th>
+                <th>權威學術論文標題</th>
+                <th>對應訓練動作</th>
+                <th>原文學術連結</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for article in articles %}
+            <tr>
+                <td>{{ article.id }}</td>
+                <td style="font-weight: bold;">{{ article.title }}</td>
+                <td><span style="color: #ffaa00;">{{ article.exercise_name }}</span></td>
+                <td><a href="{{ article.url }}" target="_blank">🔗 點擊檢視原始文獻</a></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align: center; color: #9ca3af;">目前雲端資料庫中尚無落地文獻數據。</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
